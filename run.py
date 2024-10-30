@@ -40,7 +40,7 @@ def match_and_return():
     for row in name:
         if row[0] == user_input:
             membership_no = row[1]
-            print(f"Hello {user_input}, your membership number {membership_no}\n")
+            print(f"Welcome {user_input}, to Good Food Pantry Online. Your membership number {membership_no}\n")
             break
     else:
         print("We can't find your name in the list")
@@ -58,16 +58,50 @@ def categories():
     super_list = inventory.get_all_records()
     df = pd.DataFrame(super_list)
 
-    user_search = input("What kind of food do you want? ")
+    user_search = input('Would you like to see only vegan or vegetarian foods? \n If yes, please write "Vegan" or "Vegetarian" below. ')
 
  
-    filt = (df['Allegen'].str.contains(user_search, na=False)) & (df['Status'] == 'In stock')
+    filt = (df['Allegen'].str.contains(user_search, na=False)) & (df['Status'] == 'In stock') 
     filt_df =df.loc[filt]
 
 
-    print(filt_df[['Item ID', 'Item_Name', 'Allegen', 'Status']])
+    print(filt_df[['Item_Name', 'Allegen', 'Status']])
 
 categories()
+
+
+# Login 
+# Left align columns (https://www.geeksforgeeks.org/align-columns-to-left-in-pandas-python/)
+# Change what is in stock according to expiry date
+# Data validation - invalid data
+# search for an excluding e.g. not fish
+        # extension 
+        # change colour on spreadsheet
+        # Password Protect the Membership numbers file
+# Select food and put in basket
+# Check out update orders
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
