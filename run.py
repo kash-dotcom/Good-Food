@@ -5,6 +5,8 @@ import pandas as pd
 import re
 
 
+
+
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive.file",
@@ -24,6 +26,7 @@ customers = SHEET.worksheet('customers')
    #print(cell.value)
 
 
+
 def match_and_return():
     """
     Matches the users input in a specific column and returns 
@@ -32,7 +35,6 @@ def match_and_return():
     """
 
     name = customers.get_all_values()
-
     user_input = input("What is your name? ")
     
     for row in name:
@@ -51,17 +53,20 @@ def categories():
     Matches the users input in a specific column and returns 
     * uses for dietary requirements
     * login
+    https://builtin.com/data-science/pandas-filter
     """
-    super_list = inventory.get_all_values()
-    user_search = input("What kind of food do you want? ")
-    options = []
+    super_list = inventory.get_all_records()
+    df = pd.DataFrame(super_list)
 
-    for sublist in super_list:
-        for item in sublist:
-            if item == user_search:
-                 options.append(sublist)
-    print(options)
-    
+    user_search = input("What kind of food do you want? ")
+
+ 
+    filt = (df['Allegen'].str.contains(user_search, na=False)) & (df['Status'] == 'In stock')
+    filt_df =df.loc[filt]
+
+
+    print(filt_df[['Item ID', 'Item_Name', 'Allegen', 'Status']])
+
 categories()
 
 
@@ -122,3 +127,40 @@ def main():
    #inventory
    # user = inventory.find('Name')
     #user_password = inventory.find('Password')
+
+
+#pandas trial
+    #pd_super_list = pd.DataFrame(inventory)
+    #items = inventory.column_value(1)
+
+    #df = pd.DataFrame(super_list, columns=items)
+
+    #print(df)
+
+    """
+
+column = 'Item_Name'
+    column_index = super_list[1].index(column)
+    options = []
+
+    for sublist in super_list:
+        for item in sublist:
+            if item == user_search:
+                for stock in user_search[1]:
+                    stocked = stock[column_index]
+                    options.append(stocked)
+    print(stocked)
+
+Filter
+        
+    
+
+    if not filter_df.empty:
+        for item in filter_df ['Item_Name']:
+            print(item)
+    else:
+        print("No matching items found")
+
+    """
+
+       #filt = (df['Allegen'] == user_search)
