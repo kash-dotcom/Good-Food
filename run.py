@@ -6,7 +6,6 @@ import re
 
 
 
-
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive.file",
@@ -45,7 +44,7 @@ def match_and_return():
     else:
         print("We can't find your name in the list")
 
-match_and_return()
+
 
 def categories():
 
@@ -54,20 +53,66 @@ def categories():
     * uses for dietary requirements
     * login
     https://builtin.com/data-science/pandas-filter
+    https://shecancode.io/filter-a-pandas-dataframe-by-a-partial-string-or-pattern-in-8-ways/
     """
     super_list = inventory.get_all_records()
     df = pd.DataFrame(super_list)
 
-    user_search = input('Would you like to see only vegan or vegetarian foods? \n If yes, please write "Vegan" or "Vegetarian" below. ')
-
+    user_search = input('Would you like to see only vegan or vegetarian foods? \n \n If yes, please write "Vegan" or "Vegetarian" below. \n \n ')
  
     filt = (df['Allegen'].str.contains(user_search, na=False)) & (df['Status'] == 'In stock') 
     filt_df =df.loc[filt]
 
+    if not filt_df.empty:
+        in_stock = filt_df[['Item_Name', 'Allegen', 'Status']]
+        in_stock_item_index = in_stock.set_index('Item_Name')
+        print(in_stock_item_index)
+        return in_stock_item_index
+    else:
+        print("Sorry, there are any items that match your request. Please try again")
 
-    print(filt_df[['Item_Name', 'Allegen', 'Status']])
 
-categories()
+def selection(results):
+    
+    user_selects = input('\nChose an item:\n \n')
+    choice = results[results["Item_Name"].isin([user_selects])]
+
+    print(choice)
+
+
+
+def main():
+    match_and_return()
+    results = categories()
+    selection()
+    
+main()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 # Login 
@@ -91,6 +136,28 @@ categories()
 
 
 
+# print(in_stock)
+
+    #choice = in_stock.set_index('Item_Name', inplace=True)
+
+    #print(choice)
+    
+    
+    # return in_stock
+
+
+    
+
+    #user_select = input("Select an item, e.g. if you would like the '4 British Baking Potates', just write 'potates'")
+
+    #select = filt_df['Item_Name'].str.contains(user_select, na=False)
+
+    #print(select)
+
+
+
+   
+    #pprint(choice) 
 
 
 
@@ -104,12 +171,12 @@ categories()
 
 
 
-
+"""
 def read_logins():
-    """
+   
     Common delimiter and remove the new line marker
 
-    """
+
 
     with open('logins.txt', 'r') as f:
         contents = f.readlines()
@@ -129,12 +196,12 @@ logins = read_logins()
 
 def login():
     
-    """
+
     login page
     https://www.youtube.com/watch?v=L2i6lELbNI0
     https://github.com/rodbove/console-login-system/blob/master/main.py
     https://docs.gspread.org/en/latest/
-     """
+
 
    
     #ask_username = str(input('Please enter your full name:  '))
@@ -171,7 +238,7 @@ def main():
 
     #print(df)
 
-    """
+  
 
 column = 'Item_Name'
     column_index = super_list[1].index(column)
@@ -195,6 +262,8 @@ Filter
     else:
         print("No matching items found")
 
-    """
+
 
        #filt = (df['Allegen'] == user_search)
+
+    """
