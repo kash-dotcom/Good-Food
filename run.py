@@ -65,26 +65,38 @@ def categories():
 
     if not filt_df.empty:
         in_stock = filt_df[['Item_Name', 'Allegen', 'Status']]
-        in_stock_item_index = in_stock.set_index('Item_Name')
-        print(in_stock_item_index)
-        return in_stock_item_index
+        #in_stock_item_index = in_stock.set_index('Item_Name')
+        print(in_stock)
+        return in_stock
     else:
         print("Sorry, there are any items that match your request. Please try again")
 
 
-def selection(results):
+def selection(search_results):
+
+    """
+    User selects an item using the index and it is added to the shopping bag
+    """
     
-    user_selects = input('\nChose an item:\n \n')
-    choice = results[results["Item_Name"].isin([user_selects])]
+    shopping_bag = []
+    user_selects = int(input('\nChose an item:\n \n'))
 
-    print(choice)
+    shopping_bag = search_results.loc[user_selects, 'Item_Name']
+    
+    #choice = results[results["Item_Name"].isin([user_selects])]
 
+    print(shopping_bag)
+
+
+# take user input and put it into a shopping bag'
+# match user input with items
+# put that into the shopping backg
 
 
 def main():
     match_and_return()
-    results = categories()
-    selection()
+    search_results = categories()
+    selection(search_results)
     
 main()
 
