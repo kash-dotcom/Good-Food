@@ -54,6 +54,7 @@ def categories():
     * login
     https://builtin.com/data-science/pandas-filter
     https://shecancode.io/filter-a-pandas-dataframe-by-a-partial-string-or-pattern-in-8-ways/
+    https://sentry.io/answers/write-a-list-to-a-file-in-python-with-each-item-on-a-new-line/
     """
     super_list = inventory.get_all_records()
     df = pd.DataFrame(super_list)
@@ -77,17 +78,34 @@ def selection(search_results):
     """
     User selects an item using the index and it is added to the shopping bag
     """
-    
     shopping_bag = []
-    user_selects = int(input('\nChose an item:\n \n'))
+    items = 1
+    while items < 6:
+        user_selects = int(input('\nChose an item:\n \n'))
 
-    shopping_bag = search_results.loc[user_selects, 'Item_Name']
+        try:
+            in_the_bag = search_results.loc[user_selects, 'Item_Name']
+            shopping_bag.append(in_the_bag)
+            shopping_bag_str = '\n'.join(shopping_bag) 
+            print(shopping_bag_str)
+            items += 1
+        except (KeyError, ValueError):
+            print("Sorry, we can't find that item. Please choose another item from the list")
+        #BUG - ValueError when user doesn't input anything - programme restarts
+
     
-    #choice = results[results["Item_Name"].isin([user_selects])]
+    print("Thank you, would you like to reserve your items or start again? \n")
+        
+    
 
-    print(shopping_bag)
+    
+    
+    # iteration to an another item to the array
+    # if 
 
+    
 
+#choice = results[results["Item_Name"].isin([user_selects])]
 # take user input and put it into a shopping bag'
 # match user input with items
 # put that into the shopping backg
