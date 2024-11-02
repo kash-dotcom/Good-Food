@@ -113,7 +113,8 @@ def expired():
     https://www.programiz.com/python-programming/datetime''
     https://strftime.org/ - Python strftime cheatsheet
     https://www.geeksforgeeks.org/convert-the-column-type-from-string-to-datetime-format-in-pandas-dataframe/#pandas-convert-column-to-datetime-using-pdto_datetime-function
-
+    Resolve settingwithcopywarning
+    https://www.dataquest.io/blog/settingwithcopywarning/
     """
     #Takes todays date and changes it into Pandas format
     today = datetime.date.today()
@@ -127,12 +128,23 @@ def expired():
     inventory_df['Expiry_Date'] = pd.to_datetime(inventory_df['Expiry_Date'], format='%d/%m/%y')
    
     #creates a list of expired food
-    expired_status = inventory_df[inventory_df["Expiry_Date"] < today_pd]
-    expired_filt = expired_status[['Item_Name', 'Expiry_Date']]   
-      
-    print(expired_filt)
+    expired_items = inventory_df[inventory_df["Expiry_Date"] < today_pd]
+    #expired_filt = expired_status[['Item_Name', 'Expiry_Date']]   
 
-    # Change every subset of inventory_df into 
+    #change the status column when food has expired 
+    
+    expired_items['Status'] = 'Expired'
+
+    inventory_df.update(expired_items) 
+      
+    #print(expired_filt)
+    print("Sucessfully updated")
+    print(expired_items)
+
+
+    
+
+    # Make those that fall in the subset expired_filt to change the status coloumn every subse't of inventory_df into 
 
 
    
@@ -185,7 +197,7 @@ def expired():
 
     #print(inventory_df)
 
-    #expired_status = inventory_df["Expiry_Date"] == np.where(inventory_df["Expiry_Date"] < today_obj, inventory_df["Status"] == "Expired", inventory_df["Status"] == "In stock")
+    #
     #print(expired_filt)
 
 expired()
