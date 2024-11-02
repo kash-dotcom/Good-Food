@@ -2,9 +2,9 @@ import gspread
 from google.oauth2.service_account import Credentials
 
 import pandas as pd
+import numpy as np
 import re
-
-
+import datetime
 
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -21,16 +21,16 @@ inventory = SHEET.worksheet('inventory')
 customers = SHEET.worksheet('customers')
 
 
-#for cell in inventory.range('B2:B31'):
-   #print(cell.value)
-
-
-
 def match_and_return():
     """
     Matches the users input in a specific column and returns 
     * uses for dietary requirements
     * login
+
+    Reference
+    linking gspread to pandas
+    https://medium.com/@vince.shields913/reading-google-sheets-into-a-pandas-dataframe-with-gspread-and-oauth2-375b932be7bf
+    
     """
 
     name = customers.get_all_values()
@@ -44,21 +44,19 @@ def match_and_return():
     else:
         print("We can't find your name in the list")
 
-
-
 def categories():
 
     """
     Matches the users input in a specific column and returns 
     * uses for dietary requirements
     * login
+
+    References
     https://builtin.com/data-science/pandas-filter
     https://shecancode.io/filter-a-pandas-dataframe-by-a-partial-string-or-pattern-in-8-ways/
     https://sentry.io/answers/write-a-list-to-a-file-in-python-with-each-item-on-a-new-line/
     """
-    super_list = inventory.get_all_records()
-    df = pd.DataFrame(super_list)
-
+ 
     user_search = input('Would you like to see only vegan or vegetarian foods? \n \n If yes, please write "Vegan" or "Vegetarian" below. \n \n ')
  
     filt = (df['Allegen'].str.contains(user_search, na=False)) & (df['Status'] == 'In stock') 
@@ -71,7 +69,6 @@ def categories():
         return in_stock
     else:
         print("Sorry, there are any items that match your request. Please try again")
-
 
 def selection(search_results):
 
@@ -89,34 +86,151 @@ def selection(search_results):
             shopping_bag_str = '\n'.join(shopping_bag) 
             print(shopping_bag_str)
             items += 1
-        except (KeyError, ValueError):
+
+        except (KeyError):
             print("Sorry, we can't find that item. Please choose another item from the list")
+
+        except (ValueError):
+            print("Sorry, we can't find that item. Please choose another item from the list")
+
         #BUG - ValueError when user doesn't input anything - programme restarts
 
     
     print("Thank you, would you like to reserve your items or start again? \n")
         
+
+# ---------------------------Manipulation of data of the gspread--------------------
+
+
+def expired():
+
+    """
+    Based on the expiry date
+
+    References
+    date
+    https://www.geeksforgeeks.org/get-current-date-using-python/ - reminder for using dates in python
+    https://www.programiz.com/python-programming/datetime''
+    https://strftime.org/ - Python strftime cheatsheet
+    https://www.geeksforgeeks.org/convert-the-column-type-from-string-to-datetime-format-in-pandas-dataframe/#pandas-convert-column-to-datetime-using-pdto_datetime-function
+
+    """
+    #Takes todays date and changes it into Pandas format
+    today = datetime.date.today()
+    today_pd = pd.to_datetime(today)
+
+    #imports the data and changes to a data frame for easier viewing 
+    inventory_li = inventory.get_all_records()
+    inventory_df = pd.DataFrame(inventory_li)
+
+    #Changes the data type of the expiry_date column from string to Pandas format eg datetime64[ns]                 
+    inventory_df['Expiry_Date'] = pd.to_datetime(inventory_df['Expiry_Date'], format='%d/%m/%y')
+   
+    #creates a list of expired food
+    expired_status = inventory_df[inventory_df["Expiry_Date"] < today_pd]
+    expired_filt = expired_status[['Item_Name', 'Expiry_Date']]   
+      
+    print(expired_filt)
+
+    # Change every subset of inventory_df into 
+
+
+   
+    
+
+
+
+    """
+                #today's date written as a string in uk format
+
+    today = datetime.date.today()
+
+    #today_obj = today.strftime('%d/%m/%y')
+            #today_obj = today.to_datetime()
+                #print(today_obj)
+
+            #import gspread data as a list
+    inventory_li = inventory.get_all_records()
+
+                #change to data frame
+    inventory_df = pd.DataFrame(inventory_li)
+
+
+                    #change from str to datatime
+                    
+    inventory_df['Expiry_Date'] = pd.to_datetime(inventory_df['Expiry_Date'], format='%d/%m/%y')
+
+    expired_filt = inventory_df[['Item_Name', 'Expiry_Date']]
+
+    expired_status = inventory_df["Expiry_Date"] == np.where(inventory_df["Expiry_Date"] < today)
+   
+
+    print(expired_status)
+    print(expired_filt)
+    print(today)
+
+    """
+
+        #filtered_df = inventory_df[inventory_df['Expiry_Date'].dt.strftime('%d/%m/%y') < today_obj]
+    #
+    
+#expired_filt = inventory_df[inventory_df['Expiry_Date'] < datetime.today()]
+   #current issue - datetime...(now) is <class 'datetime.date'>
+    # - Expiry Date is datetime64[ns]
+
+    #expired_filt = inventory_df['Expiry_Date'] 
+
+
+    #expired_now = (inventory_df["Expiry_Date"])
+
+    #print(inventory_df)
+
+    #expired_status = inventory_df["Expiry_Date"] == np.where(inventory_df["Expiry_Date"] < today_obj, inventory_df["Status"] == "Expired", inventory_df["Status"] == "In stock")
+    #print(expired_filt)
+
+expired()
+
+
+def sold_out():
+    """
+    Based on the number of items in the inventory
+
+    """
+
+
+
+
+
+
+def in_stock_spreadsheet():
+    """
+    Based on the expired and sold_out - show customers the available produce
+
+    """
+    # set time and date
+    # update status when something is out of stock 
+        # Sold Out
+        # Due to expire
+        # Expired
+
+        
+
+
+    
+    
+    
+    
+    
+    
     
 
     
-    
-    # iteration to an another item to the array
-    # if 
-
-    
-
-#choice = results[results["Item_Name"].isin([user_selects])]
-# take user input and put it into a shopping bag'
-# match user input with items
-# put that into the shopping backg
-
-
 def main():
     match_and_return()
     search_results = categories()
     selection(search_results)
     
-main()
+#main()
 
 
 
