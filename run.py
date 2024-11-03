@@ -1,5 +1,7 @@
 import gspread
+from gspread_dataframe import get_as_dataframe, set_with_dataframe
 from google.oauth2.service_account import Credentials
+
 
 import pandas as pd
 import numpy as np
@@ -115,6 +117,66 @@ def expired():
     https://www.geeksforgeeks.org/convert-the-column-type-from-string-to-datetime-format-in-pandas-dataframe/#pandas-convert-column-to-datetime-using-pdto_datetime-function
     Resolve settingwithcopywarning
     https://www.dataquest.io/blog/settingwithcopywarning/
+    
+    SettingWithCopyWarning
+    https://www.analyticsvidhya.com/blog/2021/11/3-ways-to-deal-with-settingwithcopywarning-in-pandas/
+    https://medium.com/@vince.shields913/reading-google-sheets-into-a-pandas-dataframe-with-gspread-and-oauth2-375b932be7bf
+    https://www.dataquest.io/blog/settingwithcopywarning/
+
+    Writing back to Google Sheet
+    https://medium.com/@jb.ranchana/write-and-append-dataframes-to-google-sheets-in-python-f62479460cf0#:~:text=Once%20you%20write%20the%20data,tolist()%20before%20appending.
+    """
+   
+    today = datetime.date.today()
+    today_pd = pd.to_datetime(today)
+
+    
+    inventory_li = inventory.get_all_records()
+    inventory_df = pd.DataFrame(inventory_li)
+
+    inventory_df['Expiry_Date'] = pd.to_datetime(inventory_df['Expiry_Date'], format='%d/%m/%y')
+
+    # ------------------------------------------------------- added Code institute tutor support
+    expired_items = inventory_df["Expiry_Date"] < today_pd
+
+   
+    inventory_df.loc[expired_items, 'Status'] = 'Expired'
+
+
+    update_spreadsheet = inventory_df.update(inventory_df)
+
+    print(inventory_df[inventory_df['Status'] == 'Expired'])
+    print("Successfully updated")
+
+
+    # -----------------------------------------------------------
+
+    inventory.clear()
+    set_with_dataframe(worksheet=inventory, dataframe=inventory_df, include_index=False, include_column_header=True, resize=True)
+
+
+
+
+
+    # expired_items = inventory_df[inventory_df["Expiry_Date"] < today_pd]
+
+    # expired_items['Status'] = 'Expired'
+
+    # #.loc[expired_items['Status'],]
+
+    # update_spreadsheet = inventory_df.update(expired_items)
+    
+    
+    # print("Sucessfully updated")
+    # print(expired_items)
+
+    
+
+    # Make those that fall in the subset expired_filt to change the status coloumn every subse't of inventory_df into   
+    
+
+
+
     """
     #Takes todays date and changes it into Pandas format
     today = datetime.date.today()
@@ -129,6 +191,7 @@ def expired():
    
     #creates a list of expired food
     expired_items = inventory_df[inventory_df["Expiry_Date"] < today_pd]
+
     #expired_filt = expired_status[['Item_Name', 'Expiry_Date']]   
 
     #change the status column when food has expired 
@@ -140,46 +203,6 @@ def expired():
     #print(expired_filt)
     print("Sucessfully updated")
     print(expired_items)
-
-
-    
-
-    # Make those that fall in the subset expired_filt to change the status coloumn every subse't of inventory_df into 
-
-
-   
-    
-
-
-
-    """
-                #today's date written as a string in uk format
-
-    today = datetime.date.today()
-
-    #today_obj = today.strftime('%d/%m/%y')
-            #today_obj = today.to_datetime()
-                #print(today_obj)
-
-            #import gspread data as a list
-    inventory_li = inventory.get_all_records()
-
-                #change to data frame
-    inventory_df = pd.DataFrame(inventory_li)
-
-
-                    #change from str to datatime
-                    
-    inventory_df['Expiry_Date'] = pd.to_datetime(inventory_df['Expiry_Date'], format='%d/%m/%y')
-
-    expired_filt = inventory_df[['Item_Name', 'Expiry_Date']]
-
-    expired_status = inventory_df["Expiry_Date"] == np.where(inventory_df["Expiry_Date"] < today)
-   
-
-    print(expired_status)
-    print(expired_filt)
-    print(today)
 
     """
 
