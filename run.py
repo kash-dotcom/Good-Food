@@ -109,56 +109,115 @@ def expired():
     """
     Based on the expiry date
 
-    References
-    date
-    https://www.geeksforgeeks.org/get-current-date-using-python/ - reminder for using dates in python
-    https://www.programiz.com/python-programming/datetime''
-    https://strftime.org/ - Python strftime cheatsheet
-    https://www.geeksforgeeks.org/convert-the-column-type-from-string-to-datetime-format-in-pandas-dataframe/#pandas-convert-column-to-datetime-using-pdto_datetime-function
-    Resolve settingwithcopywarning
-    https://www.dataquest.io/blog/settingwithcopywarning/
-    
-    SettingWithCopyWarning
-    https://www.analyticsvidhya.com/blog/2021/11/3-ways-to-deal-with-settingwithcopywarning-in-pandas/
-    https://medium.com/@vince.shields913/reading-google-sheets-into-a-pandas-dataframe-with-gspread-and-oauth2-375b932be7bf
-    https://www.dataquest.io/blog/settingwithcopywarning/
-
-    Writing back to Google Sheet
-    https://medium.com/@jb.ranchana/write-and-append-dataframes-to-google-sheets-in-python-f62479460cf0#:~:text=Once%20you%20write%20the%20data,tolist()%20before%20appending.
     """
-   
+    #Takes todays date and changes it into Pandas format
     today = datetime.date.today()
     today_pd = pd.to_datetime(today)
 
-    
+    #imports the data and changes to a data frame for easier viewing 
     inventory_li = inventory.get_all_records()
     inventory_df = pd.DataFrame(inventory_li)
 
+    #Changes the data type of the expiry_date column from string to Pandas format eg datetime64[ns] 
     inventory_df['Expiry_Date'] = pd.to_datetime(inventory_df['Expiry_Date'], format='%d/%m/%y')
 
     # ------------------------------------------------------- added Code institute tutor support
+    #creates a list of expired food
     expired_items = inventory_df["Expiry_Date"] < today_pd
 
-   
+    return expired_items
+
+
+
+expired_items = expired()
+
+
+
+def update_spreadsheet():
+
+    """
+    Update spreadsheet with dataframe
+    - reused for expired, sold_out and in_stock
+
+    """
+     #change Status column to expired
     inventory_df.loc[expired_items, 'Status'] = 'Expired'
 
-
+    #Update the pandas dataframe
     update_spreadsheet = inventory_df.update(inventory_df)
 
     print(inventory_df[inventory_df['Status'] == 'Expired'])
     print("Successfully updated")
 
-
     # -----------------------------------------------------------
 
+    #Clear and update spreadsheet with dataframe
     inventory.clear()
     set_with_dataframe(worksheet=inventory, dataframe=inventory_df, include_index=False, include_column_header=True, resize=True)
 
 
+def sold_out():
+    """
+    Based on the number of items in the inventory
+
+    """
 
 
 
-    # expired_items = inventory_df[inventory_df["Expiry_Date"] < today_pd]
+
+
+
+def in_stock_spreadsheet():
+    """
+    Based on the expired and sold_out - show customers the available produce
+
+    """
+  
+
+        
+
+
+    
+       
+
+    
+def main():
+    match_and_return()
+    search_results = categories()
+    selection(search_results)
+    
+#main()
+
+  # set time and date
+    # update status when something is out of stock 
+        # Sold Out
+        # Due to expire
+        # Expired
+
+
+# Left align columns (https://www.geeksforgeeks.org/align-columns-to-left-in-pandas-python/)
+
+# Data validation - invalid data
+# search for an excluding e.g. not fish
+        # extension 
+        # change colour on spreadsheet
+        # Password Protect the Membership numbers file
+# Select food and put in basket
+# Check out update orders
+
+
+
+
+
+
+
+
+
+
+
+
+
+# expired_items = inventory_df[inventory_df["Expiry_Date"] < today_pd]
 
     # expired_items['Status'] = 'Expired'
 
@@ -223,69 +282,6 @@ def expired():
     #
     #print(expired_filt)
 
-expired()
-
-
-def sold_out():
-    """
-    Based on the number of items in the inventory
-
-    """
-
-
-
-
-
-
-def in_stock_spreadsheet():
-    """
-    Based on the expired and sold_out - show customers the available produce
-
-    """
-    # set time and date
-    # update status when something is out of stock 
-        # Sold Out
-        # Due to expire
-        # Expired
-
-        
-
-
-    
-    
-    
-    
-    
-    
-    
-
-    
-def main():
-    match_and_return()
-    search_results = categories()
-    selection(search_results)
-    
-#main()
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 
 
 
@@ -295,15 +291,7 @@ def main():
 
 
 # Login 
-# Left align columns (https://www.geeksforgeeks.org/align-columns-to-left-in-pandas-python/)
-# Change what is in stock according to expiry date
-# Data validation - invalid data
-# search for an excluding e.g. not fish
-        # extension 
-        # change colour on spreadsheet
-        # Password Protect the Membership numbers file
-# Select food and put in basket
-# Check out update orders
+
 
 
 
