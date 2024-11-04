@@ -6,7 +6,9 @@ from google.oauth2.service_account import Credentials
 import pandas as pd
 import re
 import datetime
+import numpy as np
 from collections import Counter 
+
 
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -130,30 +132,54 @@ def order_amount(shopping):
     Turn into dictionary DataFrame 
     https://www.geeksforgeeks.org/how-to-create-dataframe-from-dictionary-in-python-pandas/
 
+    Renaming Columns
+    https://www.geeksforgeeks.org/how-to-rename-multiple-column-headers-in-a-pandas-dataframe/
+
     Inner Joing
     https://www.kdnuggets.com/2023/03/3-ways-merge-pandas-dataframes.html
 
+    Subtract columns
+    https://www.tutorialspoint.com/how-to-subtract-two-columns-in-pandas-dataframe 
+
+    NaN
+
 
     """
+    #Create shoping list as a list
     shopping_items = []
     shopping_list = shopping.split('\n')
     shopping_items.append(shopping_list)
 
+    #Flatten List into a dictionary and count the number of occurances
     flat_list = [item for new_list in shopping_items for item in new_list]
-
     item_count = Counter(flat_list)
-    print(item_count)  
 
+    #Create DataFrame 
     shopping_df = pd.DataFrame(list(item_count.items()))
-    #shopping_df = pd.DataFrame(item_count, index=shopping_items)
-
-    
+  
+    #remane and index the shopping list and fill with 0
     shopping_df = shopping_df.rename(columns={0: 'Item_Name', 1: 'Quantity'})
+    shopping_df = shopping_df.set_index('Item_Name', verify_integrity=True)
+    shopping_df = shopping_df.fillna(0)
+    print("Here is the summary of your order:\n\n" , shopping_df)
 
-    print(shopping_df)
+    #index inventory 
+    inventory = inventory_df.set_index('Item_Name', verify_integrity=True)
 
+    print(inventory)
+   
+    #Merge shopping cart with inventory list
+    shopping_cart = inventory.merge(shopping_df, on='Item_Name', how='right')
 
-    shopping_cart = inventory_df.merge(shopping_df, on='Item_Name', how='right')        
+    print(shopping_cart)
+   
+
+    #print(inventory)
+
+    inventory['Stock'] = inventory['Stock'].subtract(shopping_df['Quantity'])
+    # shopping_cart_df = shopping_cart[['Item_Name', 'Quantity', 'Stock']]
+    print(inventory)
+      
 
 def order():
     """
