@@ -7,8 +7,7 @@ import pandas as pd
 import re
 import datetime
 import numpy as np
-from collections import Counter 
-
+from collections import Counter
 
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -24,32 +23,30 @@ SHEET = GSPREAD_CLIENT.open('good_food_network')
 inventory = SHEET.worksheet('inventory')
 customers = SHEET.worksheet('customers')
 
-#imports the data and changes to a data frame for easier viewing 
+# imports the data and changes to a data frame for easier viewing
 inventory_li = inventory.get_all_records()
 inventory_df = pd.DataFrame(inventory_li)
 
-#class Customer:
-    #def __init__(self, membership, search, bag, order, inventory_update):
+# class Customer:
+    # def __init__(self, membership, search, bag, order, inventory_update):
         #self.membership = membership
         #self.search = stock
        # self.bag = options
         #self.order = selects
-    
         
 def membership_m():
     """
-    Matches the users input in a specific column and returns 
+    Matches the users input in a specific column and returns.
+    
     * uses for dietary requirements
     * login
 
-    Reference
+    Reference:
     linking gspread to pandas
     https://medium.com/@vince.shields913/reading-google-sheets-into-a-pandas-dataframe-with-gspread-and-oauth2-375b932be7bf
-    
     """
     name = customers.get_all_values()
     user_input = input("What is your name? ")
-    
     for row in name:
         if row[0] == user_input:
             membership_no = row[1]
@@ -92,7 +89,7 @@ def bag(search_results):
     shopping_bag = []
     items = 0
 
-    while items < 5:
+    while items < 3:
         user_selects = int(input('\nChose an item: '))
 
         try:
@@ -142,45 +139,49 @@ def order_amount(shopping):
     https://www.tutorialspoint.com/how-to-subtract-two-columns-in-pandas-dataframe 
 
     NaN
-
-
+    https://note.nkmk.me/en/python-pandas-nan-fillna/
+    https://saturncloud.io/blog/how-to-replace-none-with-nan-in-pandas-dataframe/#:~:text=The%20simplest%20way%20to%20replace,replace%20None%20values%20with%20NaN%20.
+    https://www.geeksforgeeks.org/convert-floats-to-integers-in-a-pandas-dataframe/
     """
-    #Create shoping list as a list
+    # Create shoping list as a list
     shopping_items = []
     shopping_list = shopping.split('\n')
     shopping_items.append(shopping_list)
 
-    #Flatten List into a dictionary and count the number of occurances
+    # Flatten List into a dictionary and count the number of occurances
     flat_list = [item for new_list in shopping_items for item in new_list]
     item_count = Counter(flat_list)
 
-    #Create DataFrame 
+    # Create DataFrame 
     shopping_df = pd.DataFrame(list(item_count.items()))
   
-    #remane and index the shopping list and fill with 0
+    # Remane and index the shopping list 
     shopping_df = shopping_df.rename(columns={0: 'Item_Name', 1: 'Quantity'})
     shopping_df = shopping_df.set_index('Item_Name', verify_integrity=True)
-    shopping_df = shopping_df.fillna(0)
+    
     print("Here is the summary of your order:\n\n" , shopping_df)
 
-    #index inventory 
+    # index inventory 
     inventory = inventory_df.set_index('Item_Name', verify_integrity=True)
 
-    print(inventory)
+    #print(inventory)
    
-    #Merge shopping cart with inventory list
+    # Merge shopping cart with inventory list
     shopping_cart = inventory.merge(shopping_df, on='Item_Name', how='right')
 
-    print(shopping_cart)
-   
+    # Subtract the inventory and fill empty values with 0 
+    inventory['Stock'] = inventory['Stock'].subtract(shopping_df['Quantity'], fill_value=0)
+    
+    # Replace NaN with the orginal values
+    inventory['Stock'] = inventory['Stock'].fillna(value=shopping_cart['Stock'])
 
-    #print(inventory)
+    # Change inventory stock column to integers
+    inventory['Stock'] = inventory['Stock'].astype(int)
 
-    inventory['Stock'] = inventory['Stock'].subtract(shopping_df['Quantity'])
-    # shopping_cart_df = shopping_cart[['Item_Name', 'Quantity', 'Stock']]
-    print(inventory)
+    reset = inventory.reset_index()
+
+    print(reset)
       
-
 def order():
     """
     Updates the order spreadsheet
@@ -189,10 +190,9 @@ def order():
     user_selects = inventory_df[['Item_Name', 'Stock']]
     print(user_selects)
 
-
 def main():
-    #customer = Customer()
-    #membership = membership_m()
+    # customer = Customer()
+    # membership = membership_m()
     search_results = search()
     shopping = bag(search_results)
     #start_again()
@@ -201,10 +201,10 @@ def main():
     
     #stock = in_stock()
     
-    #shopping = bag(search_results) 
+    # shopping = bag(search_results) 
     
-    #shopping_stock_calc(shopping)      
-    #expired_items = expired()
+    # shopping_stock_calc(shopping)      
+    # expired_items = expired()
 
 main()
 
@@ -213,8 +213,8 @@ main()
 # call number and minus one 
 # update speadsheet
 
-#Call user selection 
-#user_selects 
+# Call user selection 
+# user_selects 
 
 # 
 
@@ -334,7 +334,7 @@ def in_stock_spreadsheet():
         #filtered_df = inventory_df[inventory_df['Expiry_Date'].dt.strftime('%d/%m/%y') < today_obj]
     #
     
-#expired_filt = inventory_df[inventory_df['Expiry_Date'] < datetime.today()]
+# expired_filt = inventory_df[inventory_df['Expiry_Date'] < datetime.today()]
    #current issue - datetime...(now) is <class 'datetime.date'>
     # - Expiry Date is datetime64[ns]
 
