@@ -1,4 +1,3 @@
-## References
 # References
 
 ### Changing today's date
@@ -18,3 +17,32 @@
 ### Writing back to Google Sheet
     https://medium.com/@jb.ranchana/write-and-append-dataframes-to-google-sheets-in-python-f62479460cf0#:~:text=Once%20you%20write%20the%20data,tolist()%20before%20appending.
     
+## Search_Results
+### Searching DataFrames
+    https://pandas.pydata.org/docs/reference/api/pandas.Series.str.contains.html
+    https://www.reddit.com/r/learnpython/comments/9n39zy/search_string_in_multiple_columns_pandas/?captcha=1
+
+### Validation
+    https://flexiple.com/python/python-capitalize-first-letter
+
+## Order Amount
+### Flatten List
+    https://python.shiksha/tips/count-occurrences-of-a-list-item-in-python/
+    https://realpython.com/python-flatten-list/
+
+### Turn into dictionary DataFrame 
+    https://www.geeksforgeeks.org/how-to-create-dataframe-from-dictionary-in-python-pandas/
+
+### Renaming Columns
+    https://www.geeksforgeeks.org/how-to-rename-multiple-column-headers-in-a-pandas-dataframe/
+
+### Inner Joing
+    https://www.kdnuggets.com/2023/03/3-ways-merge-pandas-dataframes.html
+
+### Subtract columns
+    https://www.tutorialspoint.com/how-to-subtract-two-columns-in-pandas-dataframe 
+
+### NaN
+    https://note.nkmk.me/en/python-pandas-nan-fillna/
+    https://saturncloud.io/blog/how-to-replace-none-with-nan-in-pandas-dataframe/#:~:text=The%20simplest%20way%20to%20replace,replace%20None%20values%20with%20NaN%20.
+    https://www.geeksforgeeks.org/convert-floats-to-integers-in-a-pandas-dataframe/

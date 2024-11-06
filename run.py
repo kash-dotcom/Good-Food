@@ -46,40 +46,51 @@ def membership_m():
     https://medium.com/@vince.shields913/reading-google-sheets-into-a-pandas-dataframe-with-gspread-and-oauth2-375b932be7bf
     """
     name = customers.get_all_values()
-    user_input = input("What is your name? ")
+    user_input = input("\n\nWhat is your name? ")
     for row in name:
         if row[0] == user_input:
             membership_no = row[1]
-            print((f"Welcome {user_input}, to Good Food Pantry Online. Your membership number {membership_no}\n"))
+            print((f"\nWelcome {user_input}, to Good Food Pantry Online. Your membership number {membership_no}\n"))
             return membership_no
             break
     else:
         print("We can't find your name in the list")
 
-def search():
+def  search():
 
     """
-    Matches the users input in a specific column and returns 
-    * uses for dietary requirements
-    * login
+    Customers can search for food based on In Stock & Allegens
 
-    References
-    https://builtin.com/data-science/pandas-filter
-    https://shecancode.io/filter-a-pandas-dataframe-by-a-partial-string-or-pattern-in-8-ways/
-    https://sentry.io/answers/write-a-list-to-a-file-in-python-with-each-item-on-a-new-line/
     """
+    
+    while True:
+        user_search = input('\nWould you like to see only vegan or vegetarian foods? \n \n If yes, please write "Vegan" or "Vegetarian" below. \n \n ')
+        user_search_valid = user_search[0].upper()+ user_search[1:]
 
-    user_search = input('Would you like to see only vegan or vegetarian foods? \n \n If yes, please write "Vegan" or "Vegetarian" below. \n \n ')
-
-    filt = (inventory_df['Allegen'].str.contains(user_search, na=False)) & (inventory_df['Status'] == 'In stock') 
-    filt_df =inventory_df.loc[filt]
-
-    if not filt_df.empty:
-        in_stock = filt_df[['Item_Name', 'Allegen', 'Status']]
-        print(in_stock)
-        return in_stock
-    else:
-        print("Sorry, there are any items that match your request. Please try again:C")
+        if inventory_df.empty:
+            print("Sorry, that item is currently out of stock")
+            continue
+            
+        if user_search_valid == 'In stock':
+            in_stock = inventory_df['Status'].str.contains(user_search_valid, na=False)
+            in_stock_results = inventory_df.loc[in_stock]
+            print(in_stock_results)
+            return in_stock_results
+        
+            if in_stock_results.empty:
+                print("No items are currently in stock")
+                continue  
+            
+        else:
+            search_results_1 = (inventory_df['Allegen'].str.contains(user_search_valid, na=False)) & (inventory_df['Status'] == 'In stock') | (inventory_df['Item_Name'].str.contains(user_search_valid, na=False)) & (inventory_df['Status'] == 'In stock')
+            search_results_2 =inventory_df.loc[search_results_1]
+            print(search_results_2)
+            return search_results_2 
+            
+            
+            if search_results_2.empty:
+                print(f"Sorry, {user_search_valid} is currently out of stock")
+                continue
 
 def bag(search_results):
 
@@ -90,7 +101,10 @@ def bag(search_results):
     items = 0
 
     while items < 3:
+        
         user_selects = int(input('\nChose an item: '))
+        
+        
 
         try:
             in_the_bag = search_results.loc[user_selects, 'Item_Name']
@@ -98,6 +112,7 @@ def bag(search_results):
             shopping_bag_str = '\n'.join(shopping_bag) 
             print(shopping_bag_str)
             items += 1  
+            search()
 
         except (KeyError):
             print("Sorry, we can't find that item. Please choose another item from the list:KE")
@@ -114,34 +129,10 @@ def start_again():
     pass
 
 def order_amount(shopping):
+    
     """
     Calcuation the number of items the customer has in the shopping basket
 
-        for items in shopping_items:''
-        inventory_df.loc[inventory_df['Item_Name'] == items]
-        new = pd.join(inventory_df, shopping_items, on='Item_Name', how="inner")
-        print(new)
-    ref 
-    Flatten List
-    https://python.shiksha/tips/count-occurrences-of-a-list-item-in-python/
-    https://realpython.com/python-flatten-list/
-
-    Turn into dictionary DataFrame 
-    https://www.geeksforgeeks.org/how-to-create-dataframe-from-dictionary-in-python-pandas/
-
-    Renaming Columns
-    https://www.geeksforgeeks.org/how-to-rename-multiple-column-headers-in-a-pandas-dataframe/
-
-    Inner Joing
-    https://www.kdnuggets.com/2023/03/3-ways-merge-pandas-dataframes.html
-
-    Subtract columns
-    https://www.tutorialspoint.com/how-to-subtract-two-columns-in-pandas-dataframe 
-
-    NaN
-    https://note.nkmk.me/en/python-pandas-nan-fillna/
-    https://saturncloud.io/blog/how-to-replace-none-with-nan-in-pandas-dataframe/#:~:text=The%20simplest%20way%20to%20replace,replace%20None%20values%20with%20NaN%20.
-    https://www.geeksforgeeks.org/convert-floats-to-integers-in-a-pandas-dataframe/
     """
     # Create shoping list as a list
     shopping_items = []
@@ -192,7 +183,7 @@ def order():
 
 def main():
     # customer = Customer()
-    # membership = membership_m()
+    #membership = membership_m()
     search_results = search()
     shopping = bag(search_results)
     #start_again()
@@ -216,184 +207,6 @@ main()
 # Call user selection 
 # user_selects 
 
-# 
-
-# ---------------------------Manipulation of data of the gspread--------------------
-
-
-def expired():
-
-    """
-    Based on the expiry date
-
-    """
-    #Takes todays date and changes it into Pandas format
-    today = datetime.date.today()
-    today_pd = pd.to_datetime(today)
-
-    #Changes the data type of the expiry_date column from string to Pandas format eg datetime64[ns] 
-    inventory_df['Expiry_Date'] = pd.to_datetime(inventory_df['Expiry_Date'], format='%d/%m/%y')
-
-    # ------------------------------------------------------- added Code institute tutor support
-    #creates a list of expired food
-    expired_items = inventory_df["Expiry_Date"] < today_pd
-
-    return expired_items
-
-
-def update_spreadsheet():
-
-    """
-    Update spreadsheet with dataframe
-    - reused for expired, sold_out and in_stock
-
-    """
-     #change Status column to expired
-    inventory_df.loc[expired_items, 'Status'] = 'Expired'
-
-    #Update the pandas dataframe
-    update_spreadsheet = inventory_df.update(inventory_df)
-
-    print(inventory_df[inventory_df['Status'] == 'Expired'])
-    print("Successfully updated")
-
-    # -----------------------------------------------------------
-
-    #Clear and update spreadsheet with dataframe
-    inventory.clear()
-    set_with_dataframe(worksheet=inventory, dataframe=inventory_df, include_index=False, include_column_header=True, resize=True)
-
-
-def sold_out():
-    """
-    Based on the number of items in the inventory
-
-    """
-
-
-def in_stock_spreadsheet():
-    """
-    Based on the expired and sold_out - show customers the available produce
-
-    """
-  
-
-        
-
-
- 
-    
-
-
-  # set time and date
-    # update status when something is out of stock 
-        # Sold Out
-        # Due to expire
-        # Expired
-
-
-# Left align columns (https://www.geeksforgeeks.org/align-columns-to-left-in-pandas-python/)
-
-# Data validation - invalid data
-# search for an excluding e.g. not fish
-        # extension 
-        # change colour on spreadsheet
-        # Password Protect the Membership numbers file
-# Select food and put in basket
-# Check out update orders
-
-
-
-
-
-
-
-
-
-
-
-
-
-# expired_items = inventory_df[inventory_df["Expiry_Date"] < today_pd]
-
-    # expired_items['Status'] = 'Expired'
-
-    # #.loc[expired_items['Status'],]
-
-    # update_spreadsheet = inventory_df.update(expired_items)
-    
-    
-    # print("Sucessfully updated")
-    # print(expired_items)
-
-    
-
-    # Make those that fall in the subset expired_filt to change the status coloumn every subse't of inventory_df into   
-    
-
-        #filtered_df = inventory_df[inventory_df['Expiry_Date'].dt.strftime('%d/%m/%y') < today_obj]
-    #
-    
-# expired_filt = inventory_df[inventory_df['Expiry_Date'] < datetime.today()]
-   #current issue - datetime...(now) is <class 'datetime.date'>
-    # - Expiry Date is datetime64[ns]
-
-    #expired_filt = inventory_df['Expiry_Date'] 
-
-
-    #expired_now = (inventory_df["Expiry_Date"])
-
-    #print(inventory_df)
-
-    #
-    #print(expired_filt)
-
-
-
-
-
-
-
-
-
-# Login 
-
-
-
-
-
-
-
-
-
-
-
-
-# print(in_stock)
-
-    #choice = in_stock.set_index('Item_Name', inplace=True)
-
-    #print(choice)
-    
-    
-    # return in_stock
-
-
-    
-
-    #user_select = input("Select an item, e.g. if you would like the '4 British Baking Potates', just write 'potates'")
-
-    #select = filt_df['Item_Name'].str.contains(user_select, na=False)
-
-    #print(select)
-
-
-
-   
-    #pprint(choice) 
-
-
-
 
 
 
@@ -405,6 +218,46 @@ def in_stock_spreadsheet():
 
 
 """
+def search(inventory_df, food_exclusion):
+    
+
+    
+    Matches the users input in a specific column and returns 
+    * uses for dietary requirements
+    
+
+    References
+    https://builtin.com/data-science/pandas-filter
+    https://shecancode.io/filter-a-pandas-dataframe-by-a-partial-string-or-pattern-in-8-ways/
+    https://sentry.io/answers/write-a-list-to-a-file-in-python-with-each-item-on-a-new-line/
+
+    https://sparkbyexamples.com/pandas/not-in-filter-in-pandas/#:~:text=Apply%20the%20NOT%20IN%20filter,unwanted%20rows%20from%20the%20DataFrame.
+ 
+
+    def filter_by_allegens(row, food_exclusion):
+        return any(allergen in str(row))
+    # Food exlusion list
+    print((""
+Are there any foods you dislike, or do you have any allergies?
+You can either write NO if you don't have any allegeries.
+Don't worry vegans and vegetarians dietary requirements in the next question:
+    \nGluten\nDiary\nFish\nSulphites\nSoya\nSesame\nMustard\nShellfish\nEgg\nCelery\nPeanuts\nWheat\n ""))
+
+    # Turn allegen's column into a list of lists
+    # https://www.geeksforgeeks.org/how-to-break-up-a-comma-separated-string-in-pandas-column/
+    inventory_df['Allegen'] = inventory_df['Allegen'].str.split(',')
+    allergens = food_exclusion.split(",")
+    
+    list_values = ["Gluten", "Diary", "Fish", "Sulphites", "Soya", "Sesame", "Mustard", "Shellfish", "Egg", "Celery", "Peanuts", "Wheat"]
+    food_exclusion = input("Write you answer separted by a comma, e.g. Fish, Diary, Egg or If you don't have any allegeries hit ENTER :\n")
+
+    mask = inventory_df.apply(lambda x: x.map(lambda s: search(text, food_exclusion)))
+
+    filtered_df = inventory_df.loc[mask.any(axis=1)]
+    print(filtered_df)
+    return search in text().lower()
+
+#search(text, food_exclusion)
 def read_logins():
    
     Common delimiter and remove the new line marker
@@ -498,5 +351,43 @@ Filter
 
 
        #filt = (df['Allegen'] == user_search)
+
+ Order amount
+
+        for items in shopping_items:''
+        inventory_df.loc[inventory_df['Item_Name'] == items]
+        new = pd.join(inventory_df, shopping_items, on='Item_Name', how="inner")
+        print(new)
+    ref 
+    #mask = inventory_df.apply(lambda x: x.map(lambda s: search(s, )))
+
+    #filtered_search = inventory_df.loc[mask.any(axis=1)]
+
+    #print(filtered_search)
+
+    # Working Search
+
+    user_search = input('Would you like to see only vegan or vegetarian foods? \n \n If yes, please write "Vegan" or "Vegetarian" below. \n \n ')
+
+    filt = (inventory_df['Allegen'].str.contains(user_search, na=False)) & (inventory_df['Status'] == 'In stock') 
+    filt_df =inventory_df.loc[filt]
+
+    if not filt_df.empty:
+        in_stock = filt_df[['Item_Name', 'Allegen', 'Status']]
+        print(in_stock)
+        return in_stock
+    else:
+        print("Sorry, there are any items that match your request. Please try again:C")
+
+        for food in food_exclusion:
+        if food_exclusion:
+            exclusion_df = inventory_df[inventory_df['Allegen'].isin(list_values)]
+            print(exclusion_df) 
+    else:
+        print("Opps!!, something went wrong!")
+
+    # exclusion = inventory_df[~inventory_df['Allegen'].isin(list_values)]
+    # exclusion = inventory_df[~inventory_df['Allegen'].str.contains(food_exclusion, na=False).isin(list_values) & (inventory_df['Status'] == 'In stock')]
+    Reference
 
     """
