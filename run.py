@@ -9,6 +9,7 @@ import datetime
 import numpy as np
 from collections import Counter
 
+
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
     "https://www.googleapis.com/auth/drive.file",
@@ -27,12 +28,21 @@ customers = SHEET.worksheet('customers')
 inventory_li = inventory.get_all_records()
 inventory_df = pd.DataFrame(inventory_li)
 
+# Dataframe Style - https://medium.com/@syncwithdanish/bring-colors-to-your-data-frames-cfb7707259a6
+#def index_colour():
+    #colour == ("colour: green;", "")
+    #inventory_df.style.apply_index(colour)
+
+#index_colour()
+
+
+
 # class Customer:
     # def __init__(self, membership, search, bag, order, inventory_update):
-        #self.membership = membership
-        #self.search = stock
-       # self.bag = options
-        #self.order = selects
+    #self.membership = membership
+    #self.search = stock
+    # self.bag = options
+    #self.order = selects
         
 def membership_m():
     """
@@ -56,44 +66,57 @@ def membership_m():
     else:
         print("We can't find your name in the list")
 
-def  search():
 
+class Inventory:
     """
     Customers can search for food based on In Stock & Allegens
+    """    
+    def __init__(self, inventory_df):
+        self.inventory_df = inventory_df
 
-    """
-    
-    while True:
-        user_search = input('\nWould you like to see only vegan or vegetarian foods? \n \n If yes, please write "Vegan" or "Vegetarian" below. \n \n ')
-        user_search_valid = user_search[0].upper()+ user_search[1:]
-
-        if inventory_df.empty:
-            print("Sorry, that item is currently out of stock")
-            continue
-            
-        if user_search_valid == 'In stock':
-            in_stock = inventory_df['Status'].str.contains(user_search_valid, na=False)
-            in_stock_results = inventory_df.loc[in_stock]
-            print(in_stock_results)
-            return in_stock_results
+    def search_in_stock(self, user_search_valid):
+        in_stock = self.inventory_df['Status'].str.contains(user_search_valid, na=False)
+        in_stock_mask = self.inventory_df.loc[in_stock]
+        in_stock_results = in_stock_mask[['Item_Name', 'Allegen', 'Status']]
+        print(in_stock_results)
+        return in_stock_results
         
-            if in_stock_results.empty:
-                print("No items are currently in stock")
-                continue  
-            
-        else:
-            search_results_1 = (inventory_df['Allegen'].str.contains(user_search_valid, na=False)) & (inventory_df['Status'] == 'In stock') | (inventory_df['Item_Name'].str.contains(user_search_valid, na=False)) & (inventory_df['Status'] == 'In stock')
-            search_results_2 =inventory_df.loc[search_results_1]
-            print(search_results_2)
-            return search_results_2 
-            
-            
-            if search_results_2.empty:
-                print(f"Sorry, {user_search_valid} is currently out of stock")
-                continue
+    def search_allegens_item(self, user_search_valid):
+        allegen_search = (self.inventory_df['Allegen'].str.contains(user_search_valid, na=False)) & (self.inventory_df['Status'] == 'In stock') | (self.inventory_df['Item_Name'].str.contains(user_search_valid, na=False)) & (self.inventory_df['Status'] == 'In stock')
+        allegen_search_mask =self.inventory_df.loc[allegen_search]
+        allegen_results = allegen_search_mask[['Item_Name', 'Allegen', 'Status']]
+        print(allegen_results)   
+        return allegen_results
 
+    def search(self):
+        while True:
+            print("\n\x1b[32;4mSearch our inventory\u001b[0m")
+            user_search = input('You can write \u001b[32min stock\u001b[0m to find all the items available. \n Search by dietary requirements like \u001b[32mvegetarian\x1b[0m or \u001b[32mvegan\x1b[0m\n\t\x1b[32;3mRemember you can only select 5 items\x1b[0m\n \n')
+
+            user_search_valid = user_search[0].upper()+ user_search[1:]
+
+            try:
+                if user_search_valid == 'In stock':
+                    results = self.search_in_stock(user_search_valid)
+                       
+                else:
+                    results = self.search_allegens_item(user_search_valid)
+                
+                if self.search_in_stock is None and self.search_allegens_item is None:
+                    print(f"That item is currently out of stock")    
+
+            except Exception as e:
+                    print(f"107 Nah then, summat's gone wrong! An error has occured: {str(e)}")
+                    return None 
+            
+            finally:
+                    #breakpoint()
+                    return results
+                    print(results)
+
+               
 def bag(search_results):
-
+     
     """
     User selects an item using the index and it is added to the shopping bag
     """
@@ -103,26 +126,37 @@ def bag(search_results):
     while items < 3:
         
         user_selects = int(input('\nChose an item: '))
+        print(search_results, "129")
         
-        
-
+        # breakpoint()
         try:
             in_the_bag = search_results.loc[user_selects, 'Item_Name']
             shopping_bag.append(in_the_bag)
             shopping_bag_str = '\n'.join(shopping_bag) 
-            print(shopping_bag_str)
+            print("\n\u001b[32mCurrently you have basket:\x1b[0m\n",shopping_bag_str)
             items += 1  
-            search()
+            
+            
+        except Exception as e:
+            print(f"137 Ey up, summat's gone wrong! An error has occured: {str(e)}")
+            return None   
+
+        #else:
+            #print("143 Nah then, t'uther error! We have not been able to find your result. Please try again!")
+            #print("There are not results")
+            r#eturn
 
         except (KeyError):
             print("Sorry, we can't find that item. Please choose another item from the list:KE")
+            continue
 
         except (ValueError):
-            print("Sorry, we can't find that item. Please choose another item from the list:VE")
+            print("Sorry, we can't find that item. Plebrease choose another item from the list:VE")
+            continue
 
         #BUG - ValueError when user doesn't input anything - programme restarts
-
-    print("Thank you, would you like to reserve your items or start again? \n")
+    
+    print("\n\nThank you, would you like to reserve your items or start again?\n\n")
     return shopping_bag_str
 
 def start_again():
@@ -184,10 +218,14 @@ def order():
 def main():
     # customer = Customer()
     #membership = membership_m()
-    search_results = search()
-    shopping = bag(search_results)
+
+    inventory = Inventory(inventory_df)
+    search_results = inventory.search()
+    shopping_bag = bag(search_results)
+    #order_amount(shopping) 
+
     #start_again()
-    order_amount(shopping) 
+    
 
     
     #stock = in_stock()
