@@ -53,3 +53,7 @@ https://www.geeksforgeeks.org/convert-floats-to-integers-in-a-pandas-dataframe/
 
 ### Changing colours in the terminal
 https://saturncloud.io/blog/how-to-print-colored-text-to-the-terminal/
+
+## Conditional updating Pandas
+https://www.geeksforgeeks.org/how-to-replace-values-in-column-based-on-condition-in-pandas 
+* Used in the project

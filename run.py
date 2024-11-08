@@ -2,7 +2,6 @@ import gspread
 from gspread_dataframe import get_as_dataframe, set_with_dataframe
 from google.oauth2.service_account import Credentials
 
-
 import pandas as pd
 import re
 import datetime
@@ -34,16 +33,7 @@ inventory_df = pd.DataFrame(inventory_li)
     #inventory_df.style.apply_index(colour)
 
 #index_colour()
-
-
-
-# class Customer:
-    # def __init__(self, membership, search, bag, order, inventory_update):
-    #self.membership = membership
-    #self.search = stock
-    # self.bag = options
-    #self.order = selects
-        
+      
 def membership_m():
     """
     Matches the users input in a specific column and returns.
@@ -65,7 +55,6 @@ def membership_m():
             break
     else:
         print("We can't find your name in the list")
-
 
 class Inventory:
     """
@@ -113,8 +102,7 @@ class Inventory:
                     #breakpoint()
                     return results
                     print(results)
-
-               
+         
 def bag(search_results):
      
     """
@@ -133,7 +121,7 @@ def bag(search_results):
             in_the_bag = search_results.loc[user_selects, 'Item_Name']
             shopping_bag.append(in_the_bag)
             shopping_bag_str = '\n'.join(shopping_bag) 
-            print("\n\u001b[32mCurrently you have basket:\x1b[0m\n",shopping_bag_str)
+            print("\n\u001b[32mCurrently in your basket:\x1b[0m\n",shopping_bag_str)
             items += 1  
             
             
@@ -156,11 +144,21 @@ def bag(search_results):
 
         #BUG - ValueError when user doesn't input anything - programme restarts
     
-    print("\n\nThank you, would you like to reserve your items or start again?\n\n")
+    
     return shopping_bag_str
 
 def start_again():
-    pass
+    restart = input("\n\nThank you, would you like to reserve your items or start again?\nWrite\u001b[32m SA\x1b[0m to start again, or\n\u001b[32mR\x1b[0m to start again")
+    print("\n\nThank you, would you like to reserve your items or start again?\n\n")
+
+    restart_valid = restart.upper()
+
+    if restart_valid == "SA":
+        Inventory()
+    elif restart_valid =="R":
+        order_amount()
+    else:
+        start_again()
 
 def order_amount(shopping):
     
@@ -206,14 +204,52 @@ def order_amount(shopping):
     reset = inventory.reset_index()
 
     print(reset)
-      
+
 def order():
     """
-    Updates the order spreadsheet
+    Summarise Order spreadsheet
     """
-    
     user_selects = inventory_df[['Item_Name', 'Stock']]
     print(user_selects)
+
+    
+def stock_levels(inventory_df):
+    """
+    Based on the expiry date
+
+    """   
+    try:
+        # Takes todays date and changes it into Pandas format
+        today = datetime.date.today()
+        today_pd = pd.to_datetime(today)
+
+        # Change the Status column depending on the amount of stock
+        inventory_df.loc[inventory_df['Stock'] == 0, 'Status'] ="Sold out"
+        inventory_df.loc[inventory_df['Stock'] >= 1, 'Status'] ="In stock"
+
+
+        #Changes the data type of the expiry_date column from string to Pandas format eg datetime64[ns]                 
+        inventory_df['Expiry_Date'] = pd.to_datetime(inventory_df['Expiry_Date'], format='%d/%m/%y')
+
+        # Changes the Status depending on the date and the Expiry Date
+        inventory_df.loc[inventory_df['Expiry_Date'] < today_pd, 'Status'] = 'Expired'
+
+    except Exception as e:
+        print("Opps!", e)
+     
+
+# Make those that fall in the subset expired_filt to change the status coloumn every subse't of inventory_df into 
+
+def update_spreadsheet():
+    """
+    Deletes the old content from the spreadsheet and updates with new function
+
+    Uses
+    ~ Update Status column with the stock_levels function
+    """
+
+    inventory.clear()
+    set_with_dataframe(worksheet=inventory, dataframe=inventory_df, include_index=False, include_column_header=True, resize=True) 
 
 def main():
     # customer = Customer()
@@ -222,11 +258,13 @@ def main():
     inventory = Inventory(inventory_df)
     search_results = inventory.search()
     shopping_bag = bag(search_results)
-    #order_amount(shopping) 
-
+    order_amount(shopping_bag)
+    stock_levels(inventory_df)
+    update_spreadsheet()
+    #expired(inventory_df) 
     #start_again()
-    
 
+main()
     
     #stock = in_stock()
     
@@ -234,9 +272,6 @@ def main():
     
     # shopping_stock_calc(shopping)      
     # expired_items = expired()
-
-main()
-
 
 # deduct selection from the inventory 
 # call number and minus one 
@@ -256,6 +291,25 @@ main()
 
 
 """
+    # print(out_of_stock)
+    
+        #out_of_stock = (inventory_df[inventory_df['Stock']] == 0)
+    #no_stock = inventory_df.loc[out_of_stock]
+   
+
+    #if inventory_df['Stock'] > 0:
+        #inventory_df['Status'] = "In Stock"
+        #print(inventory_df)
+
+
+
+# class Customer:
+    # def __init__(self, membership, search, bag, order, inventory_update):
+    #self.membership = membership
+    #self.search = stock
+    # self.bag = options
+    #self.order = selects
+
 def search(inventory_df, food_exclusion):
     
 
@@ -317,7 +371,19 @@ def read_logins():
 
 logins = read_logins()
 
+  #creates a list of expired food
+        expired_items = inventory_df[inventory_df["Expiry_Date"] < today_pd]
+        #expired_filt = expired_status[['Item_Name', 'Expiry_Date']]   
 
+        #change the status column when food has expired 
+
+        expired_items['Status'] = 'Expired'
+        inventory_df.update(expired_items)
+  
+        #print(expired_filt)
+        print("Sucessfully updated")
+        
+        breakpoint()
 def login():
     
 
