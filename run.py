@@ -22,39 +22,50 @@ SHEET = GSPREAD_CLIENT.open('good_food_network')
 
 inventory = SHEET.worksheet('inventory')
 customers = SHEET.worksheet('customers')
+orders = SHEET.worksheet('orders')
 
 # imports the data and changes to a data frame for easier viewing
 inventory_li = inventory.get_all_records()
 inventory_df = pd.DataFrame(inventory_li)
+
+# import the data and changes to
+customer_li = customers.get_all_values()
+customer_df = pd.DataFrame(customer_li)
 
 # Dataframe Style - https://medium.com/@syncwithdanish/bring-colors-to-your-data-frames-cfb7707259a6
 #def index_colour():
     #colour == ("colour: green;", "")
     #inventory_df.style.apply_index(colour)
 
-#index_colour()
-      
-def membership_m():
+def membership_details():
     """
     Matches the users input in a specific column and returns.
-    
-    * uses for dietary requirements
-    * login
 
     Reference:
     linking gspread to pandas
     https://medium.com/@vince.shields913/reading-google-sheets-into-a-pandas-dataframe-with-gspread-and-oauth2-375b932be7bf
     """
-    name = customers.get_all_values()
-    user_input = input("\n\nWhat is your name? ")
-    for row in name:
-        if row[0] == user_input:
-            membership_no = row[1]
-            print((f"\nWelcome {user_input}, to Good Food Pantry Online. Your membership number {membership_no}\n"))
-            return membership_no
-            break
-    else:
-        print("We can't find your name in the list")
+    try:
+        username = input("\n\nWhat is your name? ")
+
+        username_valid = username.title()
+
+        customer_info = customer_df.loc[customer_df[0] == username_valid]
+
+        name = customer_info[0].values[0]
+        membership_no = customer_info[1].values[0]
+        phone = customer_info[4].values[0]
+
+        #membership_no = customer_df.loc[customer_df[2] == user_input].values[0]
+        print(f"\nWelcome {username}, to Good Food Pantry Online. Your membership number {membership_no}\n")
+        return username, membership_no, phone
+
+    except KeyError:
+        print ("We couldn't find your name in our records. Please try again.")
+
+    except Exception as e:
+        print(f"Nah then, summat's gone wrong! An error has occured: {str(e)}")
+
 
 class Inventory:
     """
@@ -144,26 +155,35 @@ def bag(search_results):
 
         #BUG - ValueError when user doesn't input anything - programme restarts
     
-    
     return shopping_bag_str
 
-def start_again():
-    restart = input("\n\nThank you, would you like to reserve your items or start again?\nWrite\u001b[32m SA\x1b[0m to start again, or\n\u001b[32mR\x1b[0m to start again")
-    print("\n\nThank you, would you like to reserve your items or start again?\n\n")
+def order(membership_details, bag):
+    """
+    customer_order, inventory_df, 
+    Summarise Order spreadsheet
+    """
+    today = datetime.date.today()
+    name = username(membership_details)
+    membership_no = membership_no(membership_details)
+    phone = phone(membership_details)
+    customer_order = shopping_bag_str(bag)
+    
+    print(today)
+    print(name)
+    print(membership_no)
+    print(phone)
+    print(customer_order)
 
-    restart_valid = restart.upper()
 
-    if restart_valid == "SA":
-        Inventory()
-    elif restart_valid =="R":
-        order_amount()
-    else:
-        start_again()
+    # order_df = pd.DataFrame(today_pd, name, membership_no, phone, shopping_bag_str)
 
-def order_amount(shopping):
+    # print(order_df)
+
+def order_amount(shopping, inventory_df):
     
     """
     Calcuation the number of items the customer has in the shopping basket
+    Turns user's shopping list into a DataFrame
 
     """
     # Create shoping list as a list
@@ -183,6 +203,7 @@ def order_amount(shopping):
     shopping_df = shopping_df.set_index('Item_Name', verify_integrity=True)
     
     print("Here is the summary of your order:\n\n" , shopping_df)
+    
 
     # index inventory 
     inventory = inventory_df.set_index('Item_Name', verify_integrity=True)
@@ -203,16 +224,11 @@ def order_amount(shopping):
 
     reset = inventory.reset_index()
 
+    inventory_df = reset
+
     print(reset)
+    return reset
 
-def order():
-    """
-    Summarise Order spreadsheet
-    """
-    user_selects = inventory_df[['Item_Name', 'Stock']]
-    print(user_selects)
-
-    
 def stock_levels(inventory_df):
     """
     Based on the expiry date
@@ -233,14 +249,15 @@ def stock_levels(inventory_df):
 
         # Changes the Status depending on the date and the Expiry Date
         inventory_df.loc[inventory_df['Expiry_Date'] < today_pd, 'Status'] = 'Expired'
+        order(today_pd)
+        return inventory_df, today_pd
 
     except Exception as e:
         print("Opps!", e)
      
-
 # Make those that fall in the subset expired_filt to change the status coloumn every subse't of inventory_df into 
 
-def update_spreadsheet():
+def update_spreadsheet(reset):
     """
     Deletes the old content from the spreadsheet and updates with new function
 
@@ -252,20 +269,22 @@ def update_spreadsheet():
     set_with_dataframe(worksheet=inventory, dataframe=inventory_df, include_index=False, include_column_header=True, resize=True) 
 
 def main():
-    # customer = Customer()
-    #membership = membership_m()
-
+    membership = membership_details()
     inventory = Inventory(inventory_df)
     search_results = inventory.search()
     shopping_bag = bag(search_results)
-    order_amount(shopping_bag)
-    stock_levels(inventory_df)
-    update_spreadsheet()
+    order_amount(shopping_bag, inventory_df)
+    #name, membership_no, phone = membership
+
+    today_pd = stock_levels(inventory_df)
+    #stock = stock_levels(inventory_df, today_pd)
+    order(membership_details, bag)
+
+    #update_spreadsheet(reset)
     #expired(inventory_df) 
     #start_again()
-
 main()
-    
+
     #stock = in_stock()
     
     # shopping = bag(search_results) 
@@ -291,6 +310,26 @@ main()
 
 
 """
+#Customer()
+
+#order()
+#membership = membership_details()
+#user_selects = inventory_df[['Item_Name', 'Stock']]
+        #print(user_selects)
+
+def start_again():
+    restart = input("\n\nThank you, would you like to reserve your items or start again?\nWrite\u001b[32m SA\x1b[0m to start again, or\n\u001b[32mR\x1b[0m to start again")
+    print("\n\nThank you, would you like to reserve your items or start again?\n\n")
+
+    restart_valid = restart.upper()
+
+    if restart_valid == "SA":
+        Inventory()
+    elif restart_valid =="R":
+        order_amount()
+    else:
+        start_again()
+
     # print(out_of_stock)
     
         #out_of_stock = (inventory_df[inventory_df['Stock']] == 0)
@@ -303,12 +342,7 @@ main()
 
 
 
-# class Customer:
-    # def __init__(self, membership, search, bag, order, inventory_update):
-    #self.membership = membership
-    #self.search = stock
-    # self.bag = options
-    #self.order = selects
+
 
 def search(inventory_df, food_exclusion):
     
