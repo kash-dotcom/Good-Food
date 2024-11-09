@@ -22,6 +22,10 @@ https://medium.com/@jb.ranchana/write-and-append-dataframes-to-google-sheets-in-
 https://pandas.pydata.org/docs/reference/api/pandas.Series.str.contains.html
 https://www.reddit.com/r/learnpython/comments/9n39zy/search_string_in_multiple_columns_pandas/?captcha=1
 
+### Create a DataFrame
+https://www.geeksforgeeks.org/different-ways-to-create-pandas-dataframe/
+
+
 ### Validation
 https://flexiple.com/python/python-capitalize-first-letter
 

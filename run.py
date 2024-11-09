@@ -32,6 +32,11 @@ inventory_df = pd.DataFrame(inventory_li)
 customer_li = customers.get_all_values()
 customer_df = pd.DataFrame(customer_li)
 
+# import the data for orders
+
+order_li = orders.get_all_records()
+order_df = pd.DataFrame(order_li)
+
 # Dataframe Style - https://medium.com/@syncwithdanish/bring-colors-to-your-data-frames-cfb7707259a6
 #def index_colour():
     #colour == ("colour: green;", "")
@@ -66,7 +71,6 @@ def membership_details():
     except Exception as e:
         print(f"Nah then, summat's gone wrong! An error has occured: {str(e)}")
 
-
 class Inventory:
     """
     Customers can search for food based on In Stock & Allegens
@@ -87,6 +91,14 @@ class Inventory:
         allegen_results = allegen_search_mask[['Item_Name', 'Allegen', 'Status']]
         print(allegen_results)   
         return allegen_results
+    
+    print(('Welcome to GoodFood Pantry online\n\n. Here you will be able to search for available food '
+    'and reserve items as part of your membership. For just £3 per order, you can choose 5 items.'
+    'Our food comes from FareShare and HIS Food, who save good food from going to landfill.'
+    'It has a shorter shelf life (6 months) but is still good quality. To become one of our volunteers '
+    'or to sign up to be a member, simply visit one of our pantries. Let’s get started. You can choose '
+    '5 items for £3 per order, sourced from quality surplus food that might otherwise end up in landfill.'
+    'To get started, please provide us with your name and begin enjoying the benefits of GoodFood Pantry'))
 
     def search(self):
         while True:
@@ -110,7 +122,6 @@ class Inventory:
                     return None 
             
             finally:
-                    #breakpoint()
                     return results
                     print(results)
          
@@ -122,7 +133,7 @@ def bag(search_results):
     shopping_bag = []
     items = 0
 
-    while items < 3:
+    while items < 2:
         
         user_selects = int(input('\nChose an item: '))
         print(search_results, "129")
@@ -134,8 +145,7 @@ def bag(search_results):
             shopping_bag_str = '\n'.join(shopping_bag) 
             print("\n\u001b[32mCurrently in your basket:\x1b[0m\n",shopping_bag_str)
             items += 1  
-            
-            
+          
         except Exception as e:
             print(f"137 Ey up, summat's gone wrong! An error has occured: {str(e)}")
             return None   
@@ -157,27 +167,36 @@ def bag(search_results):
     
     return shopping_bag_str
 
-def order(membership_details, bag):
+def order(membership_details, shopping_bag, order_df, orders):
     """
     customer_order, inventory_df, 
     Summarise Order spreadsheet
     """
     today = datetime.date.today()
-    name = username(membership_details)
-    membership_no = membership_no(membership_details)
-    phone = phone(membership_details)
-    customer_order = shopping_bag_str(bag)
+
+    name, membership_no, phone = membership_details
+
+    customer_order = shopping_bag
     
-    print(today)
-    print(name)
-    print(membership_no)
-    print(phone)
+    #print(today)
+    #print(name)
+    #print(membership_no)
+    #print(phone)
     print(customer_order)
 
+    # Create a DataFrame
+    new_order = pd.DataFrame({
+        "Date": [today],
+        "Name": [name],
+        "Membership Number": [membership_no],
+        "phone": [phone],
+        "Order":[customer_order]
+    })
 
-    # order_df = pd.DataFrame(today_pd, name, membership_no, phone, shopping_bag_str)
+    order_df = pd.concat([order_df, new_order])
 
-    # print(order_df)
+    orders.clear()
+    set_with_dataframe(worksheet=orders, dataframe=order_df, include_index=False, include_column_header=True, resize=True) 
 
 def order_amount(shopping, inventory_df):
     
@@ -202,7 +221,8 @@ def order_amount(shopping, inventory_df):
     shopping_df = shopping_df.rename(columns={0: 'Item_Name', 1: 'Quantity'})
     shopping_df = shopping_df.set_index('Item_Name', verify_integrity=True)
     
-    print("Here is the summary of your order:\n\n" , shopping_df)
+    print("\n\u001b[32mHere is the summary of your order:\x1b[0m\n\n" , shopping_df)
+    print("\n\u001b[32mThank you for your order, please visit the shop between 10 am and 3 pm to collect your order\x1b[0m\n")
     
 
     # index inventory 
@@ -226,7 +246,7 @@ def order_amount(shopping, inventory_df):
 
     inventory_df = reset
 
-    print(reset)
+   
     return reset
 
 def stock_levels(inventory_df):
@@ -269,263 +289,18 @@ def update_spreadsheet(reset):
     set_with_dataframe(worksheet=inventory, dataframe=inventory_df, include_index=False, include_column_header=True, resize=True) 
 
 def main():
-    membership = membership_details()
+    membership_details_returned = membership_details()
+
     inventory = Inventory(inventory_df)
     search_results = inventory.search()
+
     shopping_bag = bag(search_results)
     order_amount(shopping_bag, inventory_df)
-    #name, membership_no, phone = membership
 
-    today_pd = stock_levels(inventory_df)
-    #stock = stock_levels(inventory_df, today_pd)
-    order(membership_details, bag)
+    order(membership_details_returned, shopping_bag, order_df, orders)
+    
 
     #update_spreadsheet(reset)
     #expired(inventory_df) 
-    #start_again()
+    
 main()
-
-    #stock = in_stock()
-    
-    # shopping = bag(search_results) 
-    
-    # shopping_stock_calc(shopping)      
-    # expired_items = expired()
-
-# deduct selection from the inventory 
-# call number and minus one 
-# update speadsheet
-
-# Call user selection 
-# user_selects 
-
-
-
-
-
-
-
-
-
-
-
-"""
-#Customer()
-
-#order()
-#membership = membership_details()
-#user_selects = inventory_df[['Item_Name', 'Stock']]
-        #print(user_selects)
-
-def start_again():
-    restart = input("\n\nThank you, would you like to reserve your items or start again?\nWrite\u001b[32m SA\x1b[0m to start again, or\n\u001b[32mR\x1b[0m to start again")
-    print("\n\nThank you, would you like to reserve your items or start again?\n\n")
-
-    restart_valid = restart.upper()
-
-    if restart_valid == "SA":
-        Inventory()
-    elif restart_valid =="R":
-        order_amount()
-    else:
-        start_again()
-
-    # print(out_of_stock)
-    
-        #out_of_stock = (inventory_df[inventory_df['Stock']] == 0)
-    #no_stock = inventory_df.loc[out_of_stock]
-   
-
-    #if inventory_df['Stock'] > 0:
-        #inventory_df['Status'] = "In Stock"
-        #print(inventory_df)
-
-
-
-
-
-def search(inventory_df, food_exclusion):
-    
-
-    
-    Matches the users input in a specific column and returns 
-    * uses for dietary requirements
-    
-
-    References
-    https://builtin.com/data-science/pandas-filter
-    https://shecancode.io/filter-a-pandas-dataframe-by-a-partial-string-or-pattern-in-8-ways/
-    https://sentry.io/answers/write-a-list-to-a-file-in-python-with-each-item-on-a-new-line/
-
-    https://sparkbyexamples.com/pandas/not-in-filter-in-pandas/#:~:text=Apply%20the%20NOT%20IN%20filter,unwanted%20rows%20from%20the%20DataFrame.
- 
-
-    def filter_by_allegens(row, food_exclusion):
-        return any(allergen in str(row))
-    # Food exlusion list
-    print((""
-Are there any foods you dislike, or do you have any allergies?
-You can either write NO if you don't have any allegeries.
-Don't worry vegans and vegetarians dietary requirements in the next question:
-    \nGluten\nDiary\nFish\nSulphites\nSoya\nSesame\nMustard\nShellfish\nEgg\nCelery\nPeanuts\nWheat\n ""))
-
-    # Turn allegen's column into a list of lists
-    # https://www.geeksforgeeks.org/how-to-break-up-a-comma-separated-string-in-pandas-column/
-    inventory_df['Allegen'] = inventory_df['Allegen'].str.split(',')
-    allergens = food_exclusion.split(",")
-    
-    list_values = ["Gluten", "Diary", "Fish", "Sulphites", "Soya", "Sesame", "Mustard", "Shellfish", "Egg", "Celery", "Peanuts", "Wheat"]
-    food_exclusion = input("Write you answer separted by a comma, e.g. Fish, Diary, Egg or If you don't have any allegeries hit ENTER :\n")
-
-    mask = inventory_df.apply(lambda x: x.map(lambda s: search(text, food_exclusion)))
-
-    filtered_df = inventory_df.loc[mask.any(axis=1)]
-    print(filtered_df)
-    return search in text().lower()
-
-#search(text, food_exclusion)
-def read_logins():
-   
-    Common delimiter and remove the new line marker
-
-
-
-    with open('logins.txt', 'r') as f:
-        contents = f.readlines()
-
-        new_contents = []
-
-        for line in contents:
-            fields = line.split(',')
-            fields[1] = fields[1].rstrip()
-            new_contents.append(fields)
-
-        return new_contents
-
-
-logins = read_logins()
-
-  #creates a list of expired food
-        expired_items = inventory_df[inventory_df["Expiry_Date"] < today_pd]
-        #expired_filt = expired_status[['Item_Name', 'Expiry_Date']]   
-
-        #change the status column when food has expired 
-
-        expired_items['Status'] = 'Expired'
-        inventory_df.update(expired_items)
-  
-        #print(expired_filt)
-        print("Sucessfully updated")
-        
-        breakpoint()
-def login():
-    
-
-    login page
-    https://www.youtube.com/watch?v=L2i6lELbNI0
-    https://github.com/rodbove/console-login-system/blob/master/main.py
-    https://docs.gspread.org/en/latest/
-
-
-   
-    #ask_username = str(input('Please enter your full name:  '))
-    #ask_password =str(input('Please enter you password:  '))
-
-    
- 
-    logged_in = False
-
-    for line in logins:
-        if line[0] == ask_username and line[1] == ask_password:
-            print('Logged in successfully...')
-            #main()
-
-    print('Username / Password is incorrect')
-    #login()
-
-def main():
-    print(f'Welcome')
-   
-
-# login()
-
-   #inventory
-   # user = inventory.find('Name')
-    #user_password = inventory.find('Password')
-
-
-#pandas trial
-    #pd_super_list = pd.DataFrame(inventory)
-    #items = inventory.column_value(1)
-
-    #df = pd.DataFrame(super_list, columns=items)
-
-    #print(df)
-
-  
-
-column = 'Item_Name'
-    column_index = super_list[1].index(column)
-    options = []
-
-    for sublist in super_list:
-        for item in sublist:
-            if item == user_search:
-                for stock in user_search[1]:
-                    stocked = stock[column_index]
-                    options.append(stocked)
-    print(stocked)
-
-Filter
-        
-    
-
-    if not filter_df.empty:
-        for item in filter_df ['Item_Name']:
-            print(item)
-    else:
-        print("No matching items found")
-
-
-
-       #filt = (df['Allegen'] == user_search)
-
- Order amount
-
-        for items in shopping_items:''
-        inventory_df.loc[inventory_df['Item_Name'] == items]
-        new = pd.join(inventory_df, shopping_items, on='Item_Name', how="inner")
-        print(new)
-    ref 
-    #mask = inventory_df.apply(lambda x: x.map(lambda s: search(s, )))
-
-    #filtered_search = inventory_df.loc[mask.any(axis=1)]
-
-    #print(filtered_search)
-
-    # Working Search
-
-    user_search = input('Would you like to see only vegan or vegetarian foods? \n \n If yes, please write "Vegan" or "Vegetarian" below. \n \n ')
-
-    filt = (inventory_df['Allegen'].str.contains(user_search, na=False)) & (inventory_df['Status'] == 'In stock') 
-    filt_df =inventory_df.loc[filt]
-
-    if not filt_df.empty:
-        in_stock = filt_df[['Item_Name', 'Allegen', 'Status']]
-        print(in_stock)
-        return in_stock
-    else:
-        print("Sorry, there are any items that match your request. Please try again:C")
-
-        for food in food_exclusion:
-        if food_exclusion:
-            exclusion_df = inventory_df[inventory_df['Allegen'].isin(list_values)]
-            print(exclusion_df) 
-    else:
-        print("Opps!!, something went wrong!")
-
-    # exclusion = inventory_df[~inventory_df['Allegen'].isin(list_values)]
-    # exclusion = inventory_df[~inventory_df['Allegen'].str.contains(food_exclusion, na=False).isin(list_values) & (inventory_df['Status'] == 'In stock')]
-    Reference
-
-    """
