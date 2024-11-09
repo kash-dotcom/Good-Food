@@ -1,0 +1,24 @@
+DEBUG:urllib3.util.retry:Converted retries value: 3 -> Retry(total=3, connect=None, read=None, redirect=None, status=None)
+DEBUG:google.auth.transport.requests:Making request: POST https://oauth2.googleapis.com/token
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): oauth2.googleapis.com:443
+DEBUG:urllib3.connectionpool:https://oauth2.googleapis.com:443 "POST /token HTTP/11" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): www.googleapis.com:443
+DEBUG:urllib3.connectionpool:https://www.googleapis.com:443 "GET /drive/v3/files?q=mimeType%3D%22application%2Fvnd.google-apps.spreadsheet%22+and+name+%3D+%22good_food_network%22&pageSize=1000&supportsAllDrives=True&includeItemsFromAllDrives=True&fields=kind%2CnextPageToken%2Cfiles%28id%2Cname%2CcreatedTime%2CmodifiedTime%29 HTTP/11" 200 None
+DEBUG:urllib3.connectionpool:Starting new HTTPS connection (1): sheets.googleapis.com:443
+DEBUG:urllib3.connectionpool:https://sheets.googleapis.com:443 "GET /v4/spreadsheets/1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M?includeGridData=false HTTP/11" 200 None
+DEBUG:urllib3.connectionpool:https://sheets.googleapis.com:443 "GET /v4/spreadsheets/1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M?includeGridData=false HTTP/11" 200 None
+DEBUG:urllib3.connectionpool:https://sheets.googleapis.com:443 "GET /v4/spreadsheets/1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M?includeGridData=false HTTP/11" 200 None
+DEBUG:urllib3.connectionpool:https://sheets.googleapis.com:443 "GET /v4/spreadsheets/1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M?includeGridData=false HTTP/11" 200 None
+DEBUG:urllib3.connectionpool:https://sheets.googleapis.com:443 "GET /v4/spreadsheets/1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M/values/%27inventory%27 HTTP/11" 200 None
+DEBUG:urllib3.connectionpool:https://sheets.googleapis.com:443 "GET /v4/spreadsheets/1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M/values/%27customers%27 HTTP/11" 200 None
+DEBUG:urllib3.connectionpool:https://sheets.googleapis.com:443 "GET /v4/spreadsheets/1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M/values/%27orders%27 HTTP/11" 200 None
+DEBUG:urllib3.connectionpool:https://sheets.googleapis.com:443 "POST /v4/spreadsheets/1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M/values/%27orders%27:clear HTTP/11" 200 None
+DEBUG:urllib3.connectionpool:https://sheets.googleapis.com:443 "POST /v4/spreadsheets/1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M:batchUpdate HTTP/11" 200 None
+DEBUG:gspread_dataframe:100 cell updates to send
+DEBUG:urllib3.connectionpool:https://sheets.googleapis.com:443 "PUT /v4/spreadsheets/1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M/values/%27orders%27%21A1%3AE20?valueInputOption=USER_ENTERED HTTP/11" 200 None
+DEBUG:gspread_dataframe:Cell update response: {'spreadsheetId': '1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M', 'updatedRange': 'orders!A1:E20', 'updatedRows': 20, 'updatedColumns': 5, 'updatedCells': 100}
+DEBUG:urllib3.connectionpool:https://sheets.googleapis.com:443 "POST /v4/spreadsheets/1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M/values/%27inventory%27:clear HTTP/11" 200 None
+DEBUG:urllib3.connectionpool:https://sheets.googleapis.com:443 "POST /v4/spreadsheets/1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M:batchUpdate HTTP/11" 200 None
+DEBUG:gspread_dataframe:186 cell updates to send
+DEBUG:urllib3.connectionpool:https://sheets.googleapis.com:443 "PUT /v4/spreadsheets/1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M/values/%27inventory%27%21A1%3AF31?valueInputOption=USER_ENTERED HTTP/11" 200 None
+DEBUG:gspread_dataframe:Cell update response: {'spreadsheetId': '1KtqywbYEN_j6h9RCkowc6NTNoMJqDFPrgZZhRkWVh4M', 'updatedRange': 'inventory!A1:F31', 'updatedRows': 31, 'updatedColumns': 6, 'updatedCells': 186}

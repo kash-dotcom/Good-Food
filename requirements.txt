@@ -1,7 +1,9 @@
 cachetools==5.5.0
+Counter==1.0.0
 google-auth==2.35.0
 google-auth-oauthlib==1.2.1
 gspread==6.1.4
+gspread-dataframe==4.0.0
 numpy==2.1.2
 oauthlib==3.2.2
 pandas==2.2.3

@@ -7,6 +7,9 @@ import re
 import datetime
 import numpy as np
 from collections import Counter
+import logging
+
+logging.basicConfig(filename="goodfood.log", level=logging.DEBUG, filemode="w")
 
 
 SCOPE = [
@@ -51,7 +54,7 @@ def membership_details():
     https://medium.com/@vince.shields913/reading-google-sheets-into-a-pandas-dataframe-with-gspread-and-oauth2-375b932be7bf
     """
     try:
-        username = input("\n\nWhat is your name? ")
+        username = input("\n\nPlease tell us your name: ")
 
         username_valid = username.title()
 
@@ -92,14 +95,12 @@ class Inventory:
         print(allegen_results)   
         return allegen_results
     
-    print(('Welcome to GoodFood Pantry online\n\n. Here you will be able to search for available food '
-    'and reserve items as part of your membership. For just £3 per order, you can choose 5 items.'
-    'Our food comes from FareShare and HIS Food, who save good food from going to landfill.'
-    'It has a shorter shelf life (6 months) but is still good quality. To become one of our volunteers '
-    'or to sign up to be a member, simply visit one of our pantries. Let’s get started. You can choose '
-    '5 items for £3 per order, sourced from quality surplus food that might otherwise end up in landfill.'
-    'To get started, please provide us with your name and begin enjoying the benefits of GoodFood Pantry'))
-
+    print(('\n\n\x1b[32;4mWelcome to GoodFood Pantry online\u001b[0m\n\n'
+    'Here you will be able to search for available food and reserve items as part of your membership.'
+    ' For just £3 per order, you can choose 5 items. Our food comes from FareShare and HIS Food, who save '
+    ' good food from going to landfill. It has a shorter shelf life (6 months) but is still good quality. '
+    'To become one of our volunteers or to sign up to be a member, simply visit one of our pantries.'
+    'Lets get started!!!.'))
     def search(self):
         while True:
             print("\n\x1b[32;4mSearch our inventory\u001b[0m")
@@ -133,7 +134,7 @@ def bag(search_results):
     shopping_bag = []
     items = 0
 
-    while items < 2:
+    while items < 5:
         
         user_selects = int(input('\nChose an item: '))
         print(search_results, "129")
@@ -167,10 +168,10 @@ def bag(search_results):
     
     return shopping_bag_str
 
-def order(membership_details, shopping_bag, order_df, orders):
+def order(membership_details, shopping_bag, order_df, order):
     """
     customer_order, inventory_df, 
-    Summarise Order spreadsheet
+    Summarise order spreadsheet
     """
     today = datetime.date.today()
 
@@ -197,7 +198,7 @@ def order(membership_details, shopping_bag, order_df, orders):
 
     orders.clear()
     set_with_dataframe(worksheet=orders, dataframe=order_df, include_index=False, include_column_header=True, resize=True) 
-
+    print('\n\u001b[32mThank you, we have your order\x1b[0m\n')
 def order_amount(shopping, inventory_df):
     
     """
@@ -269,15 +270,15 @@ def stock_levels(inventory_df):
 
         # Changes the Status depending on the date and the Expiry Date
         inventory_df.loc[inventory_df['Expiry_Date'] < today_pd, 'Status'] = 'Expired'
-        order(today_pd)
+        
         return inventory_df, today_pd
 
     except Exception as e:
-        print("Opps!", e)
+        logging.debug("Opps!", e)
      
 # Make those that fall in the subset expired_filt to change the status coloumn every subse't of inventory_df into 
 
-def update_spreadsheet(reset):
+def update_spreadsheet():
     """
     Deletes the old content from the spreadsheet and updates with new function
 
@@ -289,6 +290,8 @@ def update_spreadsheet(reset):
     set_with_dataframe(worksheet=inventory, dataframe=inventory_df, include_index=False, include_column_header=True, resize=True) 
 
 def main():
+
+    stock_levels(inventory_df)
     membership_details_returned = membership_details()
 
     inventory = Inventory(inventory_df)
@@ -296,11 +299,8 @@ def main():
 
     shopping_bag = bag(search_results)
     order_amount(shopping_bag, inventory_df)
-
-    order(membership_details_returned, shopping_bag, order_df, orders)
+    order(membership_details_returned, shopping_bag, order_df, order)
+    update_spreadsheet()
     
-
-    #update_spreadsheet(reset)
-    #expired(inventory_df) 
     
 main()
