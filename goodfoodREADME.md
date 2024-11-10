@@ -14,6 +14,10 @@ https://strftime.org/
 Python strftime cheatsheet
 https://www.geeksforgeeks.org/convert-the-column-type-from-string-to-datetime-format-in-pandas-dataframe/#pandas-convert-column-to-datetime-using-pdto_datetime-function
 
+
+### Logo
+https://www.asciiart.eu/text-to-ascii-art
+
     
 ### Resolving SettingWithCopyWarning issue
 https://www.analyticsvidhya.com/blog/2021/11/3-ways-to-deal-with-settingwithcopywarning-in-pandas/
