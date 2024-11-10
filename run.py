@@ -7,6 +7,7 @@ import re
 import datetime
 import numpy as np
 from collections import Counter
+import os
 import logging
 
 logging.basicConfig(filename="goodfood.log", level=logging.DEBUG, filemode="w")
@@ -40,11 +41,6 @@ customer_df = pd.DataFrame(customer_li)
 order_li = orders.get_all_records()
 order_df = pd.DataFrame(order_li)
 
-# Dataframe Style - https://medium.com/@syncwithdanish/bring-colors-to-your-data-frames-cfb7707259a6
-#def index_colour():
-    #colour == ("colour: green;", "")
-    #inventory_df.style.apply_index(colour)
-
 def membership_details():
     """
     Matches the users input in a specific column and returns.
@@ -73,7 +69,7 @@ def membership_details():
             phone = customer_info[4].values[0]
 
             # prints welcome message to user
-            print(f"\nWelcome \u001b[32m{username_valid}\x1b[0m, to Good Food Pantry Online. Your membership number \u001b[32m{membership_no}\x1b[0m\n")
+            print(f"\t\nWelcome \u001b[32m{username_valid}\x1b[0m, to Good Food Pantry Online. Your membership number \u001b[32m{membership_no}\x1b[0m\n")
             return username, membership_no, phone
             break               
                               
@@ -102,49 +98,77 @@ class Inventory:
         print(allegen_results)   
         return allegen_results
     
-    print(('\n\n\x1b[32;4mWelcome to GoodFood Pantry online\u001b[0m\n\n'
+    # Tutorial: https://www.101computing.net/python-typing-text-effect/
+
+    print(r"""
+                         ____                 _ _____               _ 
+                        / ___| ___   ___   __| |  ___|__   ___   __| |
+                        | |  _ / _ \ / _ \ / _` | |_ / _ \ / _ \ / _` |
+                        | |_| | (_) | (_) | (_| |  _| (_) | (_) | (_| |
+                        \____|\___/_\___/ \__,_|_|  \___/ \___/ \__,_|
+                        | \ | | ___| |___      _____  _ __| | __       
+                        |  \| |/ _ \ __\ \ /\ / / _ \| '__| |/ /       
+                        | |\  |  __/ |_ \ V  V / (_) | |  |   <        
+                        |_| \_|\___|\__| \_/\_/ \___/|_|  |_|\_\       
+        """)
+
+    print(('\n\t\n\x1b[32;4mWelcome to GoodFood Pantry online\u001b[0m\n\n'
     'Here you will be able to search for available food and reserve items as part of your membership.'
-    ' For just £3 per order, you can choose 5 items. Our food comes from FareShare and HIS Food, who save '
+    ' For just \x1b[32;4m£3\u001b[0m per order, you can choose \x1b[32;4m5 items\u001b[0m.\n\nOur food comes from FareShare and HIS Food, who save '
     ' good food from going to landfill. It has a shorter shelf life (6 months) but is still good quality. '
-    'To become one of our volunteers or to sign up to be a member, simply visit one of our pantries.'
+    '\n\nTo become one of our volunteers or to sign up to be a member, simply visit one of our pantries.'
     'Lets get started!!!.'))
+
     def search(self):
         while True:
             print("\n\x1b[32;4mSearch our inventory\u001b[0m")
             user_search = input('You can write \u001b[32min stock\u001b[0m to find all the items available. \n Search by dietary requirements like \u001b[32mvegetarian\x1b[0m or \u001b[32mvegan\x1b[0m\n\t\x1b[32;3mRemember you can only select 5 items\x1b[0m\n \n')
-
+            
+            if not user_search:
+                print("Sorry, we didn't understand your request, please try again")
+                logging.debug('user searches the inventor - nothing was provided in the serach')
+                continue
+            # changes the case to upper to match the spreadsheet
             user_search_valid = user_search[0].upper()+ user_search[1:]
 
-            try:
+            try:                    
+                # Search all items that are in stock
                 if user_search_valid == 'In stock':
                     results = self.search_in_stock(user_search_valid)
                        
                 else:
+                    # Search all items that are in stock
                     results = self.search_allegens_item(user_search_valid)
                 
                 if self.search_in_stock is None and self.search_allegens_item is None:
-                    print(f"Nah then, summat's gone wrong! That item is currently out of stock")    
+                    print(f"Nah then, summat's gone wrong! That item is currently out of stock")
 
-            except Exception as e:
-                    logging/debug(f"Inventory-search. An error has occured: {str(e)}")
+            except IndexError:
+                    logging.debug(f"Inventory-search. An error has occured: {str(e)}")
                     return None 
-            
             finally:
-                    return results
-                    print(results)
+                return results
          
 def bag(search_results):
      
     """
     User selects an item using the index and it is added to the shopping bag
+                if not user_search:
+                raise ValueError('Please try again')
+                continue
+
+            if  user_search.empty:
+                print('Please try again')
+                raise ValueError(' ValueError - empty search')
+            user_search = int(user_search)
     """
     shopping_bag = []
     items = 0
 
-    while items < 5:
+    while items < 2:
         
-        user_selects = int(input('\nChose an item: '))
-        print(search_results, "129")
+        user_selects = int(input('\nUse the numbers on the left hand side to pick an item.\n'))
+        print(search_results)
         
         # breakpoint()
         try:
@@ -153,25 +177,13 @@ def bag(search_results):
             shopping_bag_str = '\n'.join(shopping_bag) 
             print("\n\u001b[32mCurrently in your basket:\x1b[0m\n",shopping_bag_str)
             items += 1  
-          
+
         except Exception as e:
-            logging.debug(f"in_the_bag -  An error has occured: {str(e)}")
-            return None   
-
-        #else:
-            #print("143 Nah then, t'uther error! We have not been able to find your result. Please try again!")
-            #print("137 summat's gone wrong! Ey up,There are not results")
-            r#eturn
-
-        except (KeyError):
-            print("Sorry, we can't find that item. Please choose another item from the list:KE")
+            logging.debug('Incorrect selection')
+            print("\n\x1b[32;3mI can't seem to find that item, please try again\x1b[0m")
+            print("\n\u001b[32mCurrently in your basket:\x1b[0m\n",shopping_bag_str)
             continue
-
-        except (ValueError):
-            print("Sorry, we can't find that item. Please choose another item from the list:VE")
-            continue
-
-        #BUG - ValueError when user doesn't input anything - programme restarts
+            return None
     
     return shopping_bag_str
 
@@ -186,12 +198,6 @@ def order(membership_details, shopping_bag, order_df, order):
 
     customer_order = shopping_bag
     
-    #print(today)
-    #print(name)
-    #print(membership_no)
-    #print(phone)
-    print(customer_order)
-
     # Create a DataFrame
     new_order = pd.DataFrame({
         "Date": [today],
@@ -205,7 +211,9 @@ def order(membership_details, shopping_bag, order_df, order):
 
     orders.clear()
     set_with_dataframe(worksheet=orders, dataframe=order_df, include_index=False, include_column_header=True, resize=True) 
-    print('\n\u001b[32mThank you, we have your order\x1b[0m\n')
+    
+    print("n\u001b[32mThank you for your order, please visit the shop between 10 am and 3 pm to collect your order.\nOur wonderful volunteers are now busy pulling together your order.\nDon't forget your shopping bag \x1b[0m\n")
+
 def order_amount(shopping, inventory_df):
     
     """
@@ -213,6 +221,9 @@ def order_amount(shopping, inventory_df):
     Turns user's shopping list into a DataFrame
 
     """
+    if shopping is None:
+        print("No item")
+
     # Create shoping list as a list
     shopping_items = []
     shopping_list = shopping.split('\n')
@@ -222,7 +233,7 @@ def order_amount(shopping, inventory_df):
     flat_list = [item for new_list in shopping_items for item in new_list]
     item_count = Counter(flat_list)
 
-    # Create DataFrame 
+    # Create DataFrame and counts the number of times they have occured
     shopping_df = pd.DataFrame(list(item_count.items()))
   
     # Remane and index the shopping list 
@@ -230,14 +241,11 @@ def order_amount(shopping, inventory_df):
     shopping_df = shopping_df.set_index('Item_Name', verify_integrity=True)
     
     print("\n\u001b[32mHere is the summary of your order:\x1b[0m\n\n" , shopping_df)
-    print("\n\u001b[32mThank you for your order, please visit the shop between 10 am and 3 pm to collect your order\x1b[0m\n")
+    print("\nPlease wait we are processing your order...")
     
-
     # index inventory 
     inventory = inventory_df.set_index('Item_Name', verify_integrity=True)
 
-    #print(inventory)
-   
     # Merge shopping cart with inventory list
     shopping_cart = inventory.merge(shopping_df, on='Item_Name', how='right')
 
@@ -250,12 +258,11 @@ def order_amount(shopping, inventory_df):
     # Change inventory stock column to integers
     inventory['Stock'] = inventory['Stock'].astype(int)
 
-    reset = inventory.reset_index()
-
-    inventory_df = reset
-
+    return inventory
    
-    return reset
+    set_with_dataframe(worksheet=inventory, dataframe=inventory_df, include_index=False, 
+    include_column_header=True)
+
 
 def stock_levels(inventory_df):
     """
@@ -268,24 +275,31 @@ def stock_levels(inventory_df):
         today_pd = pd.to_datetime(today)
 
         # Change the Status column depending on the amount of stock
-        inventory_df.loc[inventory_df['Stock'] == 0, 'Status'] ="Sold out"
-        inventory_df.loc[inventory_df['Stock'] >= 1, 'Status'] ="In stock"
-
+        inventory_df.loc[inventory_df['Stock'] <= 10, 'Status'] ="Sold out"
+        inventory_df.loc[inventory_df['Stock'] > 10, 'Status'] ="In stock"
 
         #Changes the data type of the expiry_date column from string to Pandas format eg datetime64[ns]                 
         inventory_df['Expiry_Date'] = pd.to_datetime(inventory_df['Expiry_Date'], format='%d/%m/%y')
 
         # Changes the Status depending on the date and the Expiry Date
         inventory_df.loc[inventory_df['Expiry_Date'] < today_pd, 'Status'] = 'Expired'
+
+        inventory.clear()
+        set_with_dataframe(worksheet=inventory, dataframe=inventory_df, include_index=False, include_column_header=True, resize=True) 
         
         return inventory_df, today_pd
 
     except Exception as e:
         logging.debug("stock_levels", e)
+
+    finally:
+        inventory.clear()
+        set_with_dataframe(worksheet=inventory, dataframe=inventory_df, include_index=False, include_column_header=True, resize=True) 
+
      
 # Make those that fall in the subset expired_filt to change the status coloumn every subse't of inventory_df into 
 
-def update_spreadsheet():
+def update_spreadsheet(reset):
     """
     Deletes the old content from the spreadsheet and updates with new function
 
@@ -303,11 +317,10 @@ def main():
 
     inventory = Inventory(inventory_df)
     search_results = inventory.search()
-
+    
     shopping_bag = bag(search_results)
     order_amount(shopping_bag, inventory_df)
+    
     order(membership_details_returned, shopping_bag, order_df, order)
-    update_spreadsheet()
-    
-    
+    # update_spreadsheet()
 main()

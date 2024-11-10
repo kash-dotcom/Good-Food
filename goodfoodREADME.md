@@ -3,7 +3,8 @@
 ## Dataframe
 ### linking gspread to pandas
 https://medium.com/@vince.shields913 reading-google-sheets-into-a-pandas-dataframe-with-gspread-and-oauth2-375b932be7bf
-    
+### Clearing Data
+https://www.youtube.com/watch?v=mvbnhfdDrro
 
 
 ### Changing today's date
@@ -30,6 +31,7 @@ https://www.reddit.com/r/learnpython/comments/9n39zy/search_string_in_multiple_c
 
 ### Create a DataFrame
 https://www.geeksforgeeks.org/different-ways-to-create-pandas-dataframe/
+https://pythonhosted.org/gspread-dataframe/
 
 
 ### Validation
