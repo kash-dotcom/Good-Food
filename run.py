@@ -48,31 +48,38 @@ order_df = pd.DataFrame(order_li)
 def membership_details():
     """
     Matches the users input in a specific column and returns.
+    
+    Returns
+    Username, membership number and phone
 
     Reference:
-    linking gspread to pandas
-    https://medium.com/@vince.shields913/reading-google-sheets-into-a-pandas-dataframe-with-gspread-and-oauth2-375b932be7bf
     """
-    try:
-        username = input("\n\nPlease tell us your name: ")
-
+    while True:
+        username = input("\n\nPlease tell us your full name: \n")
+        # Turns user name into title format
         username_valid = username.title()
+            
+        try:    
+            # Compares username to customer spreadsheet by name
+            customer_info = customer_df.loc[customer_df[0] == username_valid]          
+             
+            if customer_info.empty: 
+                print(f"\nI'm sorry, \u001b[32m{username_valid}\x1b[0m, we don't seem to have you on our list. \nIf you are not a member pop into our shop to register.\nOtherwise, please write your full name")
+                raise ValueError("User login error - empty")
 
-        customer_info = customer_df.loc[customer_df[0] == username_valid]
+            # Uses column location to retrive name, membership no, and phone number
+            name = customer_info[0].values[0] 
+            membership_no = customer_info[1].values[0]
+            phone = customer_info[4].values[0]
 
-        name = customer_info[0].values[0]
-        membership_no = customer_info[1].values[0]
-        phone = customer_info[4].values[0]
+            # prints welcome message to user
+            print(f"\nWelcome \u001b[32m{username_valid}\x1b[0m, to Good Food Pantry Online. Your membership number \u001b[32m{membership_no}\x1b[0m\n")
+            return username, membership_no, phone
+            break               
+                              
+        except Exception as e:
+            logging.debug(f"membership_details: {str(e)}")
 
-        #membership_no = customer_df.loc[customer_df[2] == user_input].values[0]
-        print(f"\nWelcome {username}, to Good Food Pantry Online. Your membership number {membership_no}\n")
-        return username, membership_no, phone
-
-    except KeyError:
-        print ("We couldn't find your name in our records. Please try again.")
-
-    except Exception as e:
-        print(f"Nah then, summat's gone wrong! An error has occured: {str(e)}")
 
 class Inventory:
     """
@@ -116,10 +123,10 @@ class Inventory:
                     results = self.search_allegens_item(user_search_valid)
                 
                 if self.search_in_stock is None and self.search_allegens_item is None:
-                    print(f"That item is currently out of stock")    
+                    print(f"Nah then, summat's gone wrong! That item is currently out of stock")    
 
             except Exception as e:
-                    print(f"107 Nah then, summat's gone wrong! An error has occured: {str(e)}")
+                    logging/debug(f"Inventory-search. An error has occured: {str(e)}")
                     return None 
             
             finally:
@@ -148,12 +155,12 @@ def bag(search_results):
             items += 1  
           
         except Exception as e:
-            print(f"137 Ey up, summat's gone wrong! An error has occured: {str(e)}")
+            logging.debug(f"in_the_bag -  An error has occured: {str(e)}")
             return None   
 
         #else:
             #print("143 Nah then, t'uther error! We have not been able to find your result. Please try again!")
-            #print("There are not results")
+            #print("137 summat's gone wrong! Ey up,There are not results")
             r#eturn
 
         except (KeyError):
@@ -161,7 +168,7 @@ def bag(search_results):
             continue
 
         except (ValueError):
-            print("Sorry, we can't find that item. Plebrease choose another item from the list:VE")
+            print("Sorry, we can't find that item. Please choose another item from the list:VE")
             continue
 
         #BUG - ValueError when user doesn't input anything - programme restarts
@@ -274,7 +281,7 @@ def stock_levels(inventory_df):
         return inventory_df, today_pd
 
     except Exception as e:
-        logging.debug("Opps!", e)
+        logging.debug("stock_levels", e)
      
 # Make those that fall in the subset expired_filt to change the status coloumn every subse't of inventory_df into 
 
