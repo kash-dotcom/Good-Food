@@ -55,9 +55,9 @@ def membership_details():
             customer_info = customer_df.loc[customer_df[0] == username_valid]
             if customer_info.empty:
                 print(f"""
-                      "\nI'm sorry, \u001b[32m{username_valid}\x1b[0m, we"
-                      "don't seem to have you on our list. \nIf you are not a"
-                      "member pop into our shop to register.\nOtherwise,
+                      \nI'm sorry, \u001b[32m{username_valid}\x1b[0m, we
+                      don't seem to have you on our list. \nIf you are not a
+                      member pop into our shop to register.\nOtherwise,
                       please write your full name
                       """
                       )
@@ -120,14 +120,14 @@ class Inventory:
 
     print(("""
     \n\t\n\x1b[32;4mWelcome to GoodFood Pantry online\u001b[0m\n\n"
-    "Here you will be able to search for available food and reserve items"
-    "as part of your membership.For just \x1b[32;4m£3\u001b[0m per order,"
-    "you can choose \x1b[32;4m5 items\u001b[0m.\n\nOur food comes from"
-    "FareShare and HIS Food, who savegood food from going to landfill."
-    It has a shorter shelf life (6 months) but is still good quality."
-    "\n\nTo become one of our volunteers or to sign up to be a member,"
-    "simply visit one of our pantries."
-    "\n\nLets get started!!!."
+    Here you will be able to search for available food and reserve items
+    as part of your membership.For just \x1b[32;4m£3\u001b[0m per order,
+    you can choose \x1b[32;4m5 items\u001b[0m.\n\nOur food comes from
+    FareShare and HIS Food, who savegood food from going to landfill.
+    It has a shorter shelf life (6 months) but is still good quality.
+    \n\nTo become one of our volunteers or to sign up to be a member,
+    simply visit one of our pantries."
+    \n\nLets get started!!!.
     """))
 
     def search(self):
@@ -136,8 +136,8 @@ class Inventory:
             user_search = input("""
             You can write \u001b[32min stock\u001b[0m to find all the items
             available. \n Search by dietary requirements like
-            \u001b[32mvegetarian\x1b[0m or \u001b[32mvegan\x1b[0m\n\t\x1b
-            [32;3mRemember you can only select 5 items\x1b[0m\n \n""")
+            \u001b[32mvegetarian\x1b[0m or \u001b[32mvegan\x1b[0m
+            \n\t\x1b[32;3mRemember you can only select 5 items\x1b[0m\n \n""")
             if not user_search:
                 print("""Sorry, we didn't understand your request, please try
                 again""")
@@ -175,7 +175,7 @@ def bag(search_results):
     shopping_bag = []
     items = 0
 
-    while items < 2:
+    while items < 5:
         user_selects = int(input("""\nUse the numbers on the left hand side to
         pick an item.\n"""))
         print(search_results)
@@ -227,9 +227,9 @@ def order(membership_details, shopping_bag, order_df, order):
                        include_index=False, include_column_header=True,
                        resize=True)
 
-    print("""\n\u001b[32mThank you for your order, please visit the shop "
-    "between 10 am and 3 pm to collect your order.\n\nOur wonderful volunteers"
-    "are now busy pulling together your order.\nDon't forget your shopping bag"
+    print("""\n\u001b[32mThank you for your order, please visit the shop 
+    between 10 am and 3 pm to collect your order.\n\nOur wonderful volunteers
+    are now busy pulling together your order.\nDon't forget your shopping bag
     \x1b[0m\n""")
 
 
