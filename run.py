@@ -25,6 +25,8 @@ inventory = SHEET.worksheet('inventory')
 customers = SHEET.worksheet('customers')
 orders = SHEET.worksheet('orders')
 
+
+# Code institute tutor support to create inventory_li and inventory_df
 # imports the data and changes to a data frame for easier viewing
 inventory_li = inventory.get_all_records()
 inventory_df = pd.DataFrame(inventory_li)
