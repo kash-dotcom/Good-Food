@@ -11,10 +11,10 @@ from google.oauth2.service_account import Credentials
 logging.basicConfig(filename="goodfood.log", level=logging.DEBUG, filemode="w")
 
 SCOPE = [
-    "https://www.googleapis.com/auth/spreadsheets",
-    "https://www.googleapis.com/auth/drive.file",
-    "https://www.googleapis.com/auth/drive"
-    ]
+"https://www.googleapis.com/auth/spreadsheets",
+"https://www.googleapis.com/auth/drive.file",
+"https://www.googleapis.com/auth/drive"
+]
 
 CREDS = Credentials.from_service_account_file('creds.json')
 SCOPED_CREDS = CREDS.with_scopes(SCOPE)
@@ -55,12 +55,10 @@ def membership_details():
             customer_info = customer_df.loc[customer_df[0] == username_valid]
             if customer_info.empty:
                 print(f"""
-                      \nI'm sorry, \u001b[32m{username_valid}\x1b[0m, we
-                      don't seem to have you on our list. \nIf you are not a
-                      member pop into our shop to register.\nOtherwise,
-                      please write your full name
-                      """
-                      )
+                        \n\u001b[32m{username_valid}\x1b[0m, I can't find you on our list.
+                        \nIf you are not a member pop into our shop to register.\
+                        """
+                        )
                 raise ValueError("User login error - empty")
             # Uses column location to retrive data from spreadsheet
             name = customer_info[0].values[0]
@@ -69,10 +67,10 @@ def membership_details():
 
             # prints welcome message to user
             print(f"""
-                  "\t\nWelcome \u001b[32m{username_valid}\x1b[0m, to GoodFood"
-                  "Pantry Online. Your membership number\u001b"
-                  "[32m{membership_no}\x1b[0m\n"
-                  """)
+            \nWelcome \u001b[32m{username_valid}\x1b[0m,
+            Your membership number
+            \u001b[32m{membership_no}\x1b[0m\n
+            """)
             return username, membership_no, phone
             break
         except Exception as e:
@@ -107,36 +105,31 @@ class Inventory:
         return allegen_results
         # Tutorial: https://www.101computing.net/python-typing-text-effect/
 
-    print(r"""
-                / ___| ___   ___   __| |  ___|__   ___   __| |
-                | |  _ / _ \ / _ \ / _` | |_ / _ \ / _ \ / _` |
-                | |_| | (_) | (_) | (_| |  _| (_) | (_) | (_| |
-                \____|\___/_\___/ \__,_|_|  \___/ \___/ \__,_|
-                | \ | | ___| |___      _____  _ __| | __
-                |  \| |/ _ \ __\ \ /\ / / _ \| '__| |/ /
-                | |\  |  __/ |_ \ V  V / (_) | |  |   <
-                |_| \_|\___|\__| \_/\_/ \___/|_|  |_|\_\
+    print(r"""           
+     _____                 _ ______              _ 
+    / ____|               | |  ____|            | |
+    | |  __  ___   ___   __| | |__ ___   ___   __| |
+    | | |_ |/ _ \ / _ \ / _` |  __/ _ \ / _ \ / _` |
+    | |__| | (_) | (_) | (_| | | | (_) | (_) | (_| |
+    \_____|\___/ \___/ \__,_|_|  \___/ \___/ \__,_|
         """)
 
     print(("""
-    \n\t\n\x1b[32;4mWelcome to GoodFood Pantry online\u001b[0m\n\n"
+    \n\x1b[32;4mWelcome to GoodFood Pantry online\u001b[0m\n\n
     Here you will be able to search for available food and reserve items
     as part of your membership.For just \x1b[32;4m£3\u001b[0m per order,
-    you can choose \x1b[32;4m5 items\u001b[0m.\n\nOur food comes from
-    FareShare and HIS Food, who savegood food from going to landfill.
-    It has a shorter shelf life (6 months) but is still good quality.
-    \n\nTo become one of our volunteers or to sign up to be a member,
-    simply visit one of our pantries."
-    \n\nLets get started!!!.
-    """))
+    you can choose \x1b[32;4m5 items\u001b[0m."""))
+
+    print("\n\nLets get started!!!.")
+
 
     def search(self):
         while True:
             print("\n\x1b[32;4mSearch our inventory\u001b[0m")
             user_search = input("""
             You can write \u001b[32min stock\u001b[0m to find all the items
-            available. \n Search by dietary requirements like
-            \u001b[32mvegetarian\x1b[0m or \u001b[32mvegan\x1b[0m
+            available. \n\tSearch by dietary requirements like
+            \u001b[32mvegetarian\x1b[0m or \u001b[32mvegan\x1b[0m. 
             \n\t\x1b[32;3mRemember you can only select 5 items\x1b[0m\n \n""")
             if not user_search:
                 print("""Sorry, we didn't understand your request, please try
@@ -178,16 +171,15 @@ def bag(search_results):
     while items < 5:
         user_selects = int(input("""\nUse the numbers on the left hand side to
         pick an item.\n"""))
+        
         print(search_results)
-
-        # breakpoint()
         try:
             in_the_bag = search_results.loc[user_selects, 'Item_Name']
             shopping_bag.append(in_the_bag)
             shopping_bag_str = '\n'.join(shopping_bag)
             print("\n\u001b[32mCurrently in your basket:\x1b[0m\n",
-                  shopping_bag_str)
-            items += 1
+                    shopping_bag_str)
+            items += 1       
         except Exception as e:
             logging.debug('Incorrect selection')
             print("""\n\x1b[32;3mI can't seem to find that item, please
@@ -195,10 +187,8 @@ def bag(search_results):
             print("""\n\u001b[32mCurrently in your basket:
             \x1b[0m\n""", shopping_bag_str)
             continue
-            return None
-
-    return shopping_bag_str
-
+        finally:
+            return shopping_bag_str  
 
 def order(membership_details, shopping_bag, order_df, order):
     """
