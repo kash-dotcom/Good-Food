@@ -1,6 +1,10 @@
 # GoodFood Online Pantry
 Through our online pantry, members can conveniently search for available food items and reserve them. For a nominal fee of £3 per order, members can select up to 5 items. This initiative is supported by FareShare and HIS Food, organisations dedicated to preventing good food from ending up in landfills. While the food we offer has a shorter shelf life of approximately six months, rest assured it remains of high quality.
 
+# How to use?
+
+
+
 ### Introduction
 This program allows pantry members to select up to five items from the inventory based on their dietary requirements and availability. The system processes the order, updates the inventory, and reminds members to bring their shopping bags.
 
@@ -79,8 +83,35 @@ LucidCharts has bee instrumental in this project to be able view and map our pro
     * Brainstorm ideas and find search terms, tutorial video, for coding errors. As well as in the development of this README file.
 
 # Testing
+Testing was undertaken using CI Python Linter and in built functions in GitPod. Unfortunately, this presented conflicts
+
+![CI_Linter](/readme_img/cl_python_linter.png)
+![in-buil Linter](/readme_img/linter%20conflict.png)
 
 
+
+## Manual testing
+| Feature | Expected Result | Steps Taken | Actual Result| 
+|----------|----------------|-------------|---------------|
+|Greetings message | Display the logo and message | None | pass - no issues | 
+| Introduction | Inform and engage customers | After focus group feedback, the message was changed to include alliteration. | The original idea was to have bullet points. However, the formatting made it harder to read. |
+| Login and verification of membership | The user enters their name and a welcome message pops up | validates user input, preventing moving on before check and a personalised message appears | Pass - Achieved expected results. Area for development - the error message is not grammatically correct when now name is entered. |
+Welcome message | A description of how to find food | The focus groups suggested making all language relate to food | Exceeded expectations the use of colour means information in broken up. |
+| Inventory table | Stock to be displayed in a table |Users can select inventory by | Exceeded exceptions - the table is well organised and include just the right Information. Areas for development - to have the content left aligned. Also, to have different colours to help users pick the right item| 
+Instruction for selecting food | Have the index numbers in a different colour to support users finding their items | Currently not developed | Functional table however, with the coloured index column it would be a better user experience
+Basket | not in the original plan | None | Good use of colour, however the first line is out of alignment |
+| Order summary | Not in original plan, however, became apparent that being able to calculate the inventory and stock, there needed be a way for multiple items to be selected to be counted. | None | meets expectations |
+| Processing order message | Not in the original plan however, it was required because due to the potential loading time that could occur whilst it updates the orders spreadsheet. Having processing message would help user experience | The focus group appreciated this step and felt it gave them reinsurance that the program was still working. | Met expectations |
+| Inventory | the inventory function retrieves data from spreadsheet to build the spreadsheet. It would then update with the order once the order had been completed | | Unfortunately the customer data isn't written back to the spreadsheet |
+| Orders spreadsheet |To take the orders based on user input and write them back to the spreadsheet | The main testing for this portion happened during the testing of other functions | This exceeded the original idea as it allowed for orders to be written as a list. However, area for development would be to have the calculated version so it could prevent human error | 
+Order confirmation message | This messaged aimed to give the user instruction about collecting their order and what to expect. | This message tested well with the focus group over they did mention it should include a thank you and explain what impact using the pantry has on the planet. | This message met expectations |
+
+
+
+
+# Known bugs
+
+There is a bug when the user is on the selection table. If they accidentally press enter then the empty dataframe will show. They
 
 
 

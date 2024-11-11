@@ -46,7 +46,7 @@ def membership_details():
     Username, membership number and phone
     """
     while True:
-        username = input("\n\nPlease tell us your full name: \n")
+        username = input("\n\n Please enter your name: \n")
         # Turns user name into title format
         username_valid = username.title()
         try:
@@ -54,9 +54,11 @@ def membership_details():
             customer_info = customer_df.loc[customer_df[0] == username_valid]
             if customer_info.empty:
                 print(f"""
-                        \n\u001b[32m{username_valid}\x1b[0m, I can't find you
-                        on our list.\nIf you are not a member pop into our
-                        shop to register.\n
+                        \n\u001b[32m{username_valid}\x1b[0m,Looks like
+                        you're not quite a member yet! Pop into our shop
+                        to sign up and start exploring our delicious
+                        offerings.
+
                         """)
                 raise ValueError("User login error - empty")
             # Uses column location to retrive data from spreadsheet
@@ -66,9 +68,8 @@ def membership_details():
 
             # prints welcome message to user
             print(f"""
-            \nWelcome \u001b[32m{username_valid}\x1b[0m,
-            Your membership number
-            \u001b[32m{membership_no}\x1b[0m\n
+            \nWelcome \u001b[32m{username_valid}\x1b[0m,Your
+            membership number\u001b[32m{membership_no}\x1b[0m\n
             """)
             return username, membership_no, phone
             break
@@ -94,7 +95,7 @@ class Inventory:
     def search_allegens_item(self, user_search_valid):
         allegen_search = (self.inventory_df['Allegen'].str.contains
         (user_search_valid, na=False)) & (self.inventory_df
-        ['Status'] == 'In stock') 
+        ['Status'] == 'In stock')
         (self.inventory_df['Item_Name'].str.contains(user_search_valid,
          na=False)) & (self.inventory_df['Status'] == 'In stock')
         allegen_search_mask = self.inventory_df.loc[allegen_search]
@@ -115,11 +116,14 @@ class Inventory:
 
     print(("""
     \n\x1b[32;4mWelcome to GoodFood Pantry online\u001b[0m\n\n
-    Here you will be able to search for available food and reserve items
-    as part of your membership.For just \x1b[32;4m£3\u001b[0m per order,
-    you can choose \x1b[32;4m5 items\u001b[0m."""))
+    Discover a world of affordable, fresh food, right at your fingertips.
+    As a member, you can:\u001b[32mSearch:\x1b[0m: For the items you
+    need \u001b[32mSelect:\x1b[0m Choose up to \u001b[32m5 items\x1b[0m
+    per order\u001b[32mSave:\x1b[0m Enjoy affordable prices of just
+    \u001b[32m£3\x1b[0m per order
+    """))
 
-    print("\n\nLets get started!!!.")
+    print("\n\n\u001b[32mStart exploring our selection today!\x1b[0m.")
 
     def search(self):
         """
@@ -128,11 +132,11 @@ class Inventory:
         As well as what is in stock.
         """
         while True:
-            print("\n\x1b[32;4mSearch our inventory\u001b[0m")
+            print("\n\x1b[32;4mFind your perfect food match!\u001b[0m")
             user_search = input("""
             You can write \u001b[32min stock\u001b[0m to find all the items
             available. \n\tSearch by dietary requirements like
-            \u001b[32mvegetarian\x1b[0m or \u001b[32mvegan\x1b[0m.
+            \u001b[32mvegetarian\x1b[0m or \u001b[32mvegan\x1b[0m.'
             \n\t\x1b[32;3mRemember you can only select 5 items\x1b[0m\n \n""")
 
             # changes the case to upper to match the spreadsheet
@@ -178,7 +182,10 @@ def bag(search_results):
     while items < 5:
         user_selects = int(input("""\nUse the numbers on the left hand side to
         pick an item.\n"""))
-        print("If you would like two of something just pressing again.")
+        print("To add multiple items, simply select the item again.")
+        print("""\n\t\x1b[32;3mFriendly reminder: \x1b[0m\n0 Please select your
+        items before pressing Enter to avoid restarting your order.
+        """)
         print(search_results)
 
         try:
@@ -238,9 +245,9 @@ def order(membership_details, shopping_bag, order_df, order):
                        include_index=False, include_column_header=True,
                        resize=True)
 
-    print("""\n\u001b[32mThank you for your order, please visit the shop
-    between 10 am and 3 pm to collect your order.\n\nOur wonderful volunteers
-    are now busy pulling together your order.\nDon't forget your shopping bag
+    print("""\n\u001b[32mYour order is now being prepared by our
+    amazing volunteers. Please pick it up between 10 AM and 3 PM.
+    \n\nDon't forget to bring a reusable bag to help us reduce waste.
     \x1b[0m\n""")
 
 
