@@ -15,6 +15,9 @@ Once they type their selection, the inventory linked to a spreadsheet is display
 Once they have finished selecting the quantity of items they want, the product status is updated as taken. They then receive a short message informing them that the computer is processing their order.
 
 Finally, a thank you message directs them to the shop and reminds them not to forget their shopping bag.
+### Login
+To try the login feature you can use **Assessor**
+
 
 # User Experience
 Due to the nature of pantries, items go quickly and people will be looking for what new stock has been delivered. Especially, when they can get premium supermarket products (Waitrose and MS) produce for £3 per shop.
@@ -74,6 +77,12 @@ LucidCharts has bee instrumental in this project to be able view and map our pro
     * Verify code
 * [Gemini](https://gemini.google.com/?utm_source=google&utm_medium=cpc&utm_campaign=2024enGB_gemfeb&gad_source=1&gclid=Cj0KCQiA0MG5BhD1ARIsAEcZtwQiAgaOnBwcdEg71JOF0GmNrW7GcviDrIQd9qIUwImjCcesufAKCUcaAkvrEALw_wcB&gclsrc=aw.ds)
     * Brainstorm ideas and find search terms, tutorial video, for coding errors. As well as in the development of this README file.
+
+# Testing
+
+
+
+
 
 # Setting up & Deployment
 
@@ -184,28 +193,6 @@ Use the service object to make API calls to read or write data to your Google Sh
 
 > Most importantly, keep your account service key secure and store creds.json file in your `.gitignore`
 
-
- 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # References
 
 ## Dataframe
@@ -214,7 +201,6 @@ https://medium.com/@vince.shields913 reading-google-sheets-into-a-pandas-datafra
 ### Clearing Data
 https://www.youtube.com/watch?v=mvbnhfdDrro
 
-
 ### Changing today's date
 https://www.geeksforgeeks.org/get-current-date-using-python/ - 
 https://www.programiz.com/python-programming/datetime''
@@ -222,16 +208,13 @@ https://strftime.org/
 Python strftime cheatsheet
 https://www.geeksforgeeks.org/convert-the-column-type-from-string-to-datetime-format-in-pandas-dataframe/#pandas-convert-column-to-datetime-using-pdto_datetime-function
 
-
 ### Logo
 https://www.asciiart.eu/text-to-ascii-art
-
-    
+ 
 ### Resolving SettingWithCopyWarning issue
 https://www.analyticsvidhya.com/blog/2021/11/3-ways-to-deal-with-settingwithcopywarning-in-pandas/
 https://medium.com/@vince.shields913/reading-google-sheets-into-a-pandas-dataframe-with-gspread-and-oauth2-375b932be7bf
 https://www.dataquest.io/blog/settingwithcopywarning/
-
 
 ### Writing back to Google Sheet
 https://medium.com/@jb.ranchana/write-and-append-dataframes-to-google-sheets-in-python-f62479460cf0#:~:text=Once%20you%20write%20the%20data,tolist()%20before%20appending.
@@ -245,6 +228,7 @@ https://www.reddit.com/r/learnpython/comments/9n39zy/search_string_in_multiple_c
 https://www.geeksforgeeks.org/different-ways-to-create-pandas-dataframe/
 https://pythonhosted.org/gspread-dataframe/
 
+[Corey Schafer's Pandas Tutorials](https://www.youtube.com/@coreyms)
 
 ### Validation
 https://flexiple.com/python/python-capitalize-first-letter

@@ -11,9 +11,9 @@ from google.oauth2.service_account import Credentials
 logging.basicConfig(filename="goodfood.log", level=logging.DEBUG, filemode="w")
 
 SCOPE = [
-"https://www.googleapis.com/auth/spreadsheets",
-"https://www.googleapis.com/auth/drive.file",
-"https://www.googleapis.com/auth/drive"
+    "https://www.googleapis.com/auth/spreadsheets",
+    "https://www.googleapis.com/auth/drive.file",
+    "https://www.googleapis.com/auth/drive"
 ]
 
 CREDS = Credentials.from_service_account_file('creds.json')
@@ -44,7 +44,6 @@ def membership_details():
     Matches the users input in a specific column and returns.
     Returns
     Username, membership number and phone
-    Reference:
     """
     while True:
         username = input("\n\nPlease tell us your full name: \n")
@@ -55,10 +54,10 @@ def membership_details():
             customer_info = customer_df.loc[customer_df[0] == username_valid]
             if customer_info.empty:
                 print(f"""
-                        \n\u001b[32m{username_valid}\x1b[0m, I can't find you on our list.
-                        \nIf you are not a member pop into our shop to register.\
-                        """
-                        )
+                        \n\u001b[32m{username_valid}\x1b[0m, I can't find you
+                        on our list.\nIf you are not a member pop into our
+                        shop to register.\n
+                        """)
                 raise ValueError("User login error - empty")
             # Uses column location to retrive data from spreadsheet
             name = customer_info[0].values[0]
@@ -94,10 +93,10 @@ class Inventory:
 
     def search_allegens_item(self, user_search_valid):
         allegen_search = (self.inventory_df['Allegen'].str.contains
-        (user_search_valid, na=False)) & (self.inventory_df['Status'] 
-        =='In stock') | (self.inventory_df['Item_Name'].str.contains
-        (user_search_valid, na=False)) & (self.inventory_df['Status'] 
-                                         == 'In stock')
+        (user_search_valid, na=False)) & (self.inventory_df
+        ['Status'] == 'In stock') 
+        (self.inventory_df['Item_Name'].str.contains(user_search_valid,
+         na=False)) & (self.inventory_df['Status'] == 'In stock')
         allegen_search_mask = self.inventory_df.loc[allegen_search]
         allegen_results = allegen_search_mask[['Item_Name', 'Allegen',
                                               'Status']]
@@ -105,8 +104,8 @@ class Inventory:
         return allegen_results
         # Tutorial: https://www.101computing.net/python-typing-text-effect/
 
-    print(r"""           
-     _____                 _ ______              _ 
+    print(r"""
+     _____                 _ ______              _
     / ____|               | |  ____|            | |
     | |  __  ___   ___   __| | |__ ___   ___   __| |
     | | |_ |/ _ \ / _ \ / _` |  __/ _ \ / _ \ / _` |
@@ -122,21 +121,20 @@ class Inventory:
 
     print("\n\nLets get started!!!.")
 
-
     def search(self):
+        """
+        Search our inventory
+        Search function that allows customer to view items based on diet
+        As well as what is in stock.
+        """
         while True:
             print("\n\x1b[32;4mSearch our inventory\u001b[0m")
             user_search = input("""
             You can write \u001b[32min stock\u001b[0m to find all the items
             available. \n\tSearch by dietary requirements like
-            \u001b[32mvegetarian\x1b[0m or \u001b[32mvegan\x1b[0m. 
+            \u001b[32mvegetarian\x1b[0m or \u001b[32mvegan\x1b[0m.
             \n\t\x1b[32;3mRemember you can only select 5 items\x1b[0m\n \n""")
-            if not user_search:
-                print("""Sorry, we didn't understand your request, please try
-                again""")
-                logging.debug("""user searches the inventor - nothing was-
-                provided in the serach""")
-                continue
+
             # changes the case to upper to match the spreadsheet
             user_search_valid = user_search[0].upper() + user_search[1:]
 
@@ -147,15 +145,23 @@ class Inventory:
                 else:
                     # Search all items that are in stock
                     results = self.search_allegens_item(user_search_valid)
-                if self.search_in_stock is None and self.search_allegens_item is None:
+                if self.search_in_stock is None and self.search_allegens_item \
+                   is None:
                     print(f"""
-                    Nah then, summat's gone wrong! That item is currently
-                    out of stock
+                    That item is currently out of stock
                     """)
-            except IndexError:
-                logging.debug(f""" Inventory-search. An error has"
+                elif user_search_valid is not self.search_in_stock:
+                    logging.critical(f"""Search: User selected an invalid
+                    entry: {user_selects}""")
+                    continue
+            except IndexError as e:
+                logging.debug(f""" Inventory-searchIndexError. An error has"
                 "occured:{str(e)}""")
-                return None
+                continue
+            except KeyError as e:
+                logging.debug(f""" Inventory-search- KeyError. An error has"
+                "occured:{str(e)}""")
+                continue
             finally:
                 return results
 
@@ -163,7 +169,8 @@ class Inventory:
 def bag(search_results):
 
     """
-    User selects an item using the index and it is added to the shopping bag
+    User selects an item using the index and it is added to the
+    shopping bag
     """
     shopping_bag = []
     items = 0
@@ -171,15 +178,28 @@ def bag(search_results):
     while items < 5:
         user_selects = int(input("""\nUse the numbers on the left hand side to
         pick an item.\n"""))
-        
+        print("If you would like two of something just pressing again.")
         print(search_results)
+
         try:
             in_the_bag = search_results.loc[user_selects, 'Item_Name']
             shopping_bag.append(in_the_bag)
             shopping_bag_str = '\n'.join(shopping_bag)
             print("\n\u001b[32mCurrently in your basket:\x1b[0m\n",
-                    shopping_bag_str)
-            items += 1       
+                  shopping_bag_str)
+            items += 1
+            if user_selects not in search_results.index:
+                print("""\n\x1b[32;3mI can't seem to find that item, please"
+                "try again\x1b[0m""")
+                logging.critical(f"""Inventory-search- UnboundLocalErrorr.
+                An error has occured:""")
+                continue
+        except KeyError as e:
+            logging.debug(f"""Inventory-search- KeyError. An error has
+            occured:{str(e)}""")
+            print("""\n\x1b[32;3mI can't seem to find that item, please
+            "try again\x1b[0m""")
+            continue
         except Exception as e:
             logging.debug('Incorrect selection')
             print("""\n\x1b[32;3mI can't seem to find that item, please
@@ -187,8 +207,9 @@ def bag(search_results):
             print("""\n\u001b[32mCurrently in your basket:
             \x1b[0m\n""", shopping_bag_str)
             continue
-        finally:
-            return shopping_bag_str  
+
+    return shopping_bag_str
+
 
 def order(membership_details, shopping_bag, order_df, order):
     """
@@ -217,7 +238,7 @@ def order(membership_details, shopping_bag, order_df, order):
                        include_index=False, include_column_header=True,
                        resize=True)
 
-    print("""\n\u001b[32mThank you for your order, please visit the shop 
+    print("""\n\u001b[32mThank you for your order, please visit the shop
     between 10 am and 3 pm to collect your order.\n\nOur wonderful volunteers
     are now busy pulling together your order.\nDon't forget your shopping bag
     \x1b[0m\n""")
@@ -295,7 +316,8 @@ def stock_levels(inventory_df):
                                                      format='%d/%m/%y')
 
         # Changes the Status depending on the date and the Expiry Date
-        inventory_df.loc[inventory_df['Expiry_Date'] < today_pd, 'Status'] = 'Expired'
+        inventory_df.loc[inventory_df['Expiry_Date'] <
+                         today_pd, 'Status'] = 'Expired'
 
         inventory.clear()
         set_with_dataframe(worksheet=inventory, dataframe=inventory_df,
