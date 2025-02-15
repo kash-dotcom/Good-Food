@@ -1,11 +1,9 @@
 import datetime
 import logging
 from collections import Counter
-
 import gspread
 import pandas as pd
-import numpy as np
-from gspread_dataframe import get_as_dataframe, set_with_dataframe
+from gspread_dataframe import set_with_dataframe
 from google.oauth2.service_account import Credentials
 
 logging.basicConfig(filename="goodfood.log", level=logging.DEBUG, filemode="w")
@@ -40,6 +38,34 @@ customer_df = pd.DataFrame(customer_li)
 order_li = orders.get_all_records()
 order_df = pd.DataFrame(order_li)
 
+# logo function
+
+
+def logo_function():
+    logo = (r"""
+         _____                 _ ______              _
+        / ____|               | |  ____|            | |
+        | |  __  ___   ___   __| | |__ ___   ___   __| |
+        | | |_ |/ _ \ / _ \ / _` |  __/ _ \ / _ \ / _` |
+        | |__| | (_) | (_) | (_| | | | (_) | (_) | (_| |
+        \_____|\___/ \___/ \__,_|_|  \___/ \___/ \__,_|
+            """)
+    return logo
+
+
+def welcome():
+    print(logo_function())
+    print(("""
+    \n\x1b[32;4mWelcome to GoodFood Pantry online\u001b[0m\n\n
+Discover a world of affordable, fresh food, right at your fingertips.
+As a member, you can:\n\n\u001b[32mSearch:\x1b[0m: For the items you need
+\u001b[32mSelect:\x1b[0m Choose up to \u001b[32m5 items\x1b[0m per order
+\u001b[32mSave:\x1b[0m Enjoy affordable prices of just \u001b[32m£3\x1b[0m
+"""))
+
+    print("\n\n\u001b[32mStart exploring our selection today!\x1b[0m")
+    return None
+
 
 def membership_details():
     """
@@ -47,7 +73,8 @@ def membership_details():
     Returns
     Username, membership number and phone
     """
-    while True:
+    shop_or_exit = 0
+    while shop_or_exit < 5:
         username = input("\n\n Please enter your name: \n")
         # Turns user name into title format
         username_valid = username.title()
@@ -56,123 +83,42 @@ def membership_details():
             customer_info = customer_df.loc[customer_df[0] == username_valid]
             if customer_info.empty:
                 print(f"""
-                        \n\u001b[32m{username_valid}\x1b[0m,Looks like
-                        you're not quite a member yet! Pop into our shop
-                        to sign up and start exploring our delicious
-                        offerings.
-
+\n\u001b[32m{username_valid}\x1b[0m,Looks like you're not quite a member yet!
+Pop into our shop to sign up and start exploring our delicious offerings.
                         """)
+                shop_or_exit += 1
+            if shop_or_exit == 5:
+                print("""
+\x1b[32;3mYou have reached the maximum number of attempts.\x1b[0m""")
+                return None
+
                 raise ValueError("User login error - empty")
+
             # Uses column location to retrive data from spreadsheet
-            name = customer_info[0].values[0]
+            # name = customer_info[0].values[0]
             membership_no = customer_info[1].values[0]
             phone = customer_info[4].values[0]
 
             # prints welcome message to user
             print(f"""
-            \nWelcome \u001b[32m{username_valid}\x1b[0m,Your
-            membership number\u001b[32m{membership_no}\x1b[0m\n
-            """)
+\nWelcome \u001b[32m{username_valid}\x1b[0m,
+Your membership number \u001b[32m{membership_no}\x1b[0m\n
+\n\x1b[32;4mFind your perfect food match!\u001b[0m
+""")
             return username, membership_no, phone
             break
         except Exception as e:
             logging.debug(f"membership_details: {str(e)}")
 
 
-class Inventory:
-    """
-    Customers can search for food based on In Stock & Allegens
-    """
-    def __init__(self, inventory_df):
-        self.inventory_df = inventory_df
-
-    def search_in_stock(self, user_search_valid):
-        in_stock = self.inventory_df['Status'].str.contains(user_search_valid,
-                                                            na=False)
-        in_stock_mask = self.inventory_df.loc[in_stock]
-        in_stock_results = in_stock_mask[['Item_Name', 'Allegen', 'Status']]
-        print(in_stock_results)
-        return in_stock_results
-
-    def search_allegens_item(self, user_search_valid):
-        allegen_search = (self.inventory_df['Allegen'].str.contains
-        (user_search_valid, na=False)) & (self.inventory_df
-        ['Status'] == 'In stock')
-        (self.inventory_df['Item_Name'].str.contains(user_search_valid,
-         na=False)) & (self.inventory_df['Status'] == 'In stock')
-        allegen_search_mask = self.inventory_df.loc[allegen_search]
-        allegen_results = allegen_search_mask[['Item_Name', 'Allegen',
-                                              'Status']]
-        print(allegen_results)
-        return allegen_results
-        # Tutorial: https://www.101computing.net/python-typing-text-effect/
-
-    print(r"""
-     _____                 _ ______              _
-    / ____|               | |  ____|            | |
-    | |  __  ___   ___   __| | |__ ___   ___   __| |
-    | | |_ |/ _ \ / _ \ / _` |  __/ _ \ / _ \ / _` |
-    | |__| | (_) | (_) | (_| | | | (_) | (_) | (_| |
-    \_____|\___/ \___/ \__,_|_|  \___/ \___/ \__,_|
-        """)
-
-    print(("""
-    \n\x1b[32;4mWelcome to GoodFood Pantry online\u001b[0m\n\n
-    Discover a world of affordable, fresh food, right at your fingertips.
-    As a member, you can:\u001b[32mSearch:\x1b[0m: For the items you
-    need \u001b[32mSelect:\x1b[0m Choose up to \u001b[32m5 items\x1b[0m
-    per order\u001b[32mSave:\x1b[0m Enjoy affordable prices of just
-    \u001b[32m£3\x1b[0m per order
-    """))
-
-    print("\n\n\u001b[32mStart exploring our selection today!\x1b[0m.")
-
-    def search(self):
-        """
-        Search our inventory
-        Search function that allows customer to view items based on diet
-        As well as what is in stock.
-        """
-        while True:
-            print("\n\x1b[32;4mFind your perfect food match!\u001b[0m")
-            user_search = input("""
-            You can write \u001b[32min stock\u001b[0m to find all the items
-            available. \n\tSearch by dietary requirements like
-            \u001b[32mvegetarian\x1b[0m or \u001b[32mvegan\x1b[0m.'
-            \n\t\x1b[32;3mRemember you can only select 5 items\x1b[0m\n \n""")
-
-            # changes the case to upper to match the spreadsheet
-            user_search_valid = user_search[0].upper() + user_search[1:]
-
-            try:
-                # Search all items that are in stock
-                if user_search_valid == 'In stock':
-                    results = self.search_in_stock(user_search_valid)
-                else:
-                    # Search all items that are in stock
-                    results = self.search_allegens_item(user_search_valid)
-                if self.search_in_stock is None and self.search_allegens_item \
-                   is None:
-                    print(f"""
-                    That item is currently out of stock
-                    """)
-                elif user_search_valid is not self.search_in_stock:
-                    logging.critical(f"""Search: User selected an invalid
-                    entry: {user_selects}""")
-                    continue
-            except IndexError as e:
-                logging.debug(f""" Inventory-searchIndexError. An error has"
-                "occured:{str(e)}""")
-                continue
-            except KeyError as e:
-                logging.debug(f""" Inventory-search- KeyError. An error has"
-                "occured:{str(e)}""")
-                continue
-            finally:
-                return results
+def in_stock(inventory_df):
+    stock_mask = inventory_df[inventory_df['Status'] == 'In stock']
+    stock_results = stock_mask[['Item_Name', 'Allegen', 'Status']]
+    print(stock_results)
+    return stock_results
 
 
-def bag(search_results):
+def bag(stock):
 
     """
     User selects an item using the index and it is added to the
@@ -182,41 +128,29 @@ def bag(search_results):
     items = 0
 
     while items < 5:
-        user_selects = int(input("""\nUse the numbers on the left hand side to
-        pick an item.\n"""))
-        print("To add multiple items, simply select the item again.")
-        print("""\n\t\x1b[32;3mFriendly reminder: \x1b[0m\n0 Please select your
-        items before pressing Enter to avoid restarting your order.
-        """)
-        print(search_results)
-
         try:
-            in_the_bag = search_results.loc[user_selects, 'Item_Name']
-            shopping_bag.append(in_the_bag)
-            shopping_bag_str = '\n'.join(shopping_bag)
-            print("\n\u001b[32mCurrently in your basket:\x1b[0m\n",
-                  shopping_bag_str)
-            items += 1
-            if user_selects not in search_results.index:
-                print("""\n\x1b[32;3mI can't seem to find that item, please"
-                "try again\x1b[0m""")
-                logging.critical(f"""Inventory-search- UnboundLocalErrorr.
-                An error has occured:""")
-                continue
-        except KeyError as e:
-            logging.debug(f"""Inventory-search- KeyError. An error has
-            occured:{str(e)}""")
-            print("""\n\x1b[32;3mI can't seem to find that item, please
-            "try again\x1b[0m""")
-            continue
-        except Exception as e:
-            logging.debug('Incorrect selection')
-            print("""\n\x1b[32;3mI can't seem to find that item, please
-            "try again\x1b[0m""")
-            print("""\n\u001b[32mCurrently in your basket:
-            \x1b[0m\n""", shopping_bag_str)
+            user_selects = int(input("""\nUse the numbers on the left hand side to
+            pick an item.\n"""))
+            print("To add multiple items, simply select the item again.")
+            # print("""\n\t\x1b[32;3mFriendly reminder: \x1b[0m\n0 Please select your
+            # items before pressing Enter to avoid restarting your order.
+            # """)
+        except ValueError:
+            print("""\n\x1b[32;3mPlease enter a number to select an item\x1b[0m""")
             continue
 
+        if user_selects not in stock.index:
+            print("""\n\x1b[32;3mI can't seem to find that item, please"
+            "try again\x1b[0m""")
+            continue
+
+        in_the_bag = stock.loc[user_selects, 'Item_Name']
+        shopping_bag.append(in_the_bag)
+        shopping_bag_str = '\n'.join(shopping_bag)
+        print("\n\u001b[32mCurrently in your basket:\x1b[0m\n",
+              shopping_bag_str)
+        items += 1
+        continue
     return shopping_bag_str
 
 
@@ -248,9 +182,10 @@ def order(membership_details, shopping_bag, order_df, order):
                        resize=True)
 
     print("""\n\u001b[32mYour order is now being prepared by our
-    amazing volunteers. Please pick it up between 10 AM and 3 PM.
-    \n\nDon't forget to bring a reusable bag to help us reduce waste.
-    \x1b[0m\n""")
+amazing volunteers. Please pick it up between 10 AM and 3 PM.
+\n\nDon't forget to bring a reusable bag to help us reduce waste.
+\x1b[0m\n
+          """)
 
 
 def order_amount(shopping, inventory_df):
@@ -283,25 +218,28 @@ def order_amount(shopping, inventory_df):
     print("\nPlease wait we are processing your order...")
 
     # index inventory
-    inventory = inventory_df.set_index('Item_Name', verify_integrity=True)
+    inventory_oa = inventory_df.set_index('Item_Name', verify_integrity=True)
 
     # Merge shopping cart with inventory list
-    shopping_cart = inventory.merge(shopping_df, on='Item_Name', how='right')
+    shopping_cart = inventory_oa.merge(
+        shopping_df, on='Item_Name', how='right'
+    )
 
     # Subtract the inventory and fill empty values with 0
-    inventory['Stock'] = inventory['Stock'].subtract(shopping_df['Quantity'],
+    inventory_oa['Stock'] = inventory_oa['Stock'].subtract(shopping_df['Quantity'],
                                                      fill_value=0)
 
     # Replace NaN with the orginal values
-    inventory['Stock'] = inventory['Stock'].fillna(value=shopping_cart
-                                                   ['Stock'])
+    inventory_oa['Stock'] = inventory_oa['Stock'].fillna(value=shopping_cart
+                                                         ['Stock'])
 
     # Change inventory stock column to integers
-    inventory['Stock'] = inventory['Stock'].astype(int)
+    inventory_oa['Stock'] = inventory_oa['Stock'].astype(int)
 
-    return inventory
     set_with_dataframe(worksheet=inventory, dataframe=inventory_df,
                        include_index=False, include_column_header=True)
+
+    return inventory
 
 
 def stock_levels(inventory_df):
@@ -333,10 +271,12 @@ def stock_levels(inventory_df):
                            include_index=False, include_column_header=True,
                            resize=True)
 
+        print("""
+\n\x1b[32mChecking what we have in store for you today...\x1b[0m\n""")
         return inventory_df, today_pd
 
     except Exception as e:
-        logging.debug("stock_levels", e)
+        logging.debug(f"stock_levels: {str(e)}")
 
     finally:
         inventory.clear()
@@ -363,14 +303,19 @@ def update_spreadsheet(reset):
 
 
 def main():
-    # Fodl
-    stock_levels(inventory_df)
+    # Checking membership and exiting if not a member
+    welcome()
     membership_details_returned = membership_details()
-    # f
-    inventory = Inventory(inventory_df)
-    search_results = inventory.search()
-    # d
-    shopping_bag = bag(search_results)
+    logo = logo_function()
+    if membership_details_returned is None:
+        print(logo)
+        return
+    # Check stock levels
+    stock_levels(inventory_df)
+
+    stock = in_stock(inventory_df)
+
+    shopping_bag = bag(stock)
     order_amount(shopping_bag, inventory_df)
     # f
     order(membership_details_returned, shopping_bag, order_df, order)
