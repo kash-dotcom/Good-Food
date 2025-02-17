@@ -111,138 +111,7 @@ Your membership number \u001b[32m{membership_no}\x1b[0m\n
             logging.debug(f"membership_details: {str(e)}")
 
 
-def in_stock(inventory_df):
-    stock_mask = inventory_df[inventory_df['Status'] == 'In stock']
-    stock_results = stock_mask[['Item_Name', 'Allegen', 'Status']]
-    print(stock_results)
-    return stock_results
-
-
-def bag(stock):
-
-    """
-    User selects an item using the index and it is added to the
-    shopping bag
-    """
-    shopping_bag = []
-    items = 0
-
-    while items < 5:
-        try:
-            user_selects = int(input("""\nUse the numbers on the left hand side to
-            pick an item.\n"""))
-            print("To add multiple items, simply select the item again.")
-            # print("""\n\t\x1b[32;3mFriendly reminder: \x1b[0m\n0 Please select your
-            # items before pressing Enter to avoid restarting your order.
-            # """)
-        except ValueError:
-            print("""\n\x1b[32;3mPlease enter a number to select an item\x1b[0m""")
-            continue
-
-        if user_selects not in stock.index:
-            print("""\n\x1b[32;3mI can't seem to find that item, please"
-            "try again\x1b[0m""")
-            continue
-
-        in_the_bag = stock.loc[user_selects, 'Item_Name']
-        shopping_bag.append(in_the_bag)
-        shopping_bag_str = '\n'.join(shopping_bag)
-        print("\n\u001b[32mCurrently in your basket:\x1b[0m\n",
-              shopping_bag_str)
-        items += 1
-        continue
-    return shopping_bag_str
-
-
-def order(membership_details, shopping_bag, order_df, order):
-    """
-    customer_order, inventory_df,
-    Summarise order spreadsheet
-    """
-    today = datetime.date.today()
-
-    name, membership_no, phone = membership_details
-
-    customer_order = shopping_bag
-
-    # Create a DataFrame
-    new_order = pd.DataFrame({
-        "Date": [today],
-        "Name": [name],
-        "Membership Number": [membership_no],
-        "phone": [phone],
-        "Order": [customer_order]
-    })
-
-    order_df = pd.concat([order_df, new_order])
-
-    orders.clear()
-    set_with_dataframe(worksheet=orders, dataframe=order_df,
-                       include_index=False, include_column_header=True,
-                       resize=True)
-
-    print("""\n\u001b[32mYour order is now being prepared by our
-amazing volunteers. Please pick it up between 10 AM and 3 PM.
-\n\nDon't forget to bring a reusable bag to help us reduce waste.
-\x1b[0m\n
-          """)
-
-
-def order_amount(shopping, inventory_df):
-    """
-    Calcuation the number of items the customer has in the shopping basket
-    Turns user's shopping list into a DataFrame
-
-    """
-    if shopping is None:
-        print("No item")
-
-    # Create shoping list as a list
-    shopping_items = []
-    shopping_list = shopping.split('\n')
-    shopping_items.append(shopping_list)
-
-    # Flatten List into a dictionary and count the number of occurances
-    flat_list = [item for new_list in shopping_items for item in new_list]
-    item_count = Counter(flat_list)
-
-    # Create DataFrame and counts the number of times they have occured
-    shopping_df = pd.DataFrame(list(item_count.items()))
-
-    # Remane and index the shopping list
-    shopping_df = shopping_df.rename(columns={0: 'Item_Name', 1: 'Quantity'})
-    shopping_df = shopping_df.set_index('Item_Name', verify_integrity=True)
-
-    print("\n\u001b[32mHere is the summary of your order:\x1b[0m\n\n",
-          shopping_df)
-    print("\nPlease wait we are processing your order...")
-
-    # index inventory
-    inventory_oa = inventory_df.set_index('Item_Name', verify_integrity=True)
-
-    # Merge shopping cart with inventory list
-    shopping_cart = inventory_oa.merge(
-        shopping_df, on='Item_Name', how='right'
-    )
-
-    # Subtract the inventory and fill empty values with 0
-    inventory_oa['Stock'] = inventory_oa['Stock'].subtract(shopping_df['Quantity'],
-                                                     fill_value=0)
-
-    # Replace NaN with the orginal values
-    inventory_oa['Stock'] = inventory_oa['Stock'].fillna(value=shopping_cart
-                                                         ['Stock'])
-
-    # Change inventory stock column to integers
-    inventory_oa['Stock'] = inventory_oa['Stock'].astype(int)
-
-    set_with_dataframe(worksheet=inventory, dataframe=inventory_df,
-                       include_index=False, include_column_header=True)
-
-    return inventory
-
-
-def stock_levels(inventory_df):
+def stock_levels(inventory, inventory_df):
     """
     Based on the expiry date
 
@@ -266,10 +135,8 @@ def stock_levels(inventory_df):
         inventory_df.loc[inventory_df['Expiry_Date'] <
                          today_pd, 'Status'] = 'Expired'
 
-        inventory.clear()
-        set_with_dataframe(worksheet=inventory, dataframe=inventory_df,
-                           include_index=False, include_column_header=True,
-                           resize=True)
+        clear_spreadsheet(inventory, inventory_df)
+        update_spreadsheet(inventory, inventory_df)
 
         print("""
 \n\x1b[32mChecking what we have in store for you today...\x1b[0m\n""")
@@ -279,16 +146,164 @@ def stock_levels(inventory_df):
         logging.debug(f"stock_levels: {str(e)}")
 
     finally:
-        inventory.clear()
-        set_with_dataframe(worksheet=inventory, dataframe=inventory_df,
-                           include_index=False, include_column_header=True,
-                           resize=True)
-
-# Make those that fall in the subset expired_filt to change the status coloumn
-# every subset of inventory_df into
+        update_spreadsheet(inventory, inventory_df)
 
 
-def update_spreadsheet(reset):
+def in_stock(inventory_df):
+    stock_mask = inventory_df[inventory_df['Status'] == 'In stock']
+    stock_results = stock_mask[['Item_Name', 'Allegen', 'Status']]
+    print(stock_results)
+    return stock_results
+
+
+def bag(stock):
+
+    """
+    User selects an item using the index and it is added to the
+    shopping bag
+    """
+    shopping_bag = []
+    items = 0
+
+    while items < 5:
+        try:
+            user_selects = int(input(
+                "\nUse the numbers on the left hand side to pick an item.\n"
+            ))
+            print("To add multiple items, simply select the item again.")
+            # print("""\n\t\x1b[32;3mFriendly reminder: \x1b[0m\n0 Please
+            # select your items before pressing Enter to avoid restarting .
+            # your order""")
+        except ValueError:
+            print(
+                """\n\x1b[32;3mPlease enter a number to select an item
+                \x1b[0m"""
+            )
+            continue
+
+        if user_selects not in stock.index:
+            print("""\n\x1b[32;3mI can't seem to find that item, please"
+            "try again\x1b[0m""")
+            continue
+
+        in_the_bag = stock.loc[user_selects, 'Item_Name']
+        shopping_bag.append(in_the_bag)
+        shopping_bag_str = '\n'.join(shopping_bag)
+        print("\n\u001b[32mCurrently in your basket:\x1b[0m\n",
+              shopping_bag_str)
+        items += 1
+
+        # updates inventory
+        continue
+    return shopping_bag_str
+
+
+def order(membership_details, shopping_bag, order_df):
+    """
+    customer_order, inventory_df,
+    Summarise order spreadsheet
+    """
+    today = datetime.date.today()
+
+    name, membership_no, phone = membership_details
+
+    customer_order = shopping_bag
+
+    # Create a DataFrame
+    new_order = pd.DataFrame({
+        "Date": [today],
+        "Name": [name],
+        "Membership Number": [membership_no],
+        "phone": [phone],
+        "Order": [customer_order]
+    })
+
+    order_df = pd.concat([order_df, new_order])
+
+    # Update the order spreadsheet
+    update_spreadsheet(orders, order_df)
+
+    print("""\n\u001b[32mYour order is now being prepared by our
+amazing volunteers. Please pick it up between 10 AM and 3 PM.
+\n\nDon't forget to bring a reusable bag to help us reduce waste.
+\x1b[0m\n
+          """)
+
+
+def order_amount(shopping_bag):
+    """
+    Calcuation the number of items the customer has in the shopping basket
+    Turns user's shopping list into a DataFrame
+
+    """
+    if shopping_bag is None:
+        print("No item")
+
+    # # Create shopping list as a list
+    shopping_items = []
+    shopping_list = shopping_bag.split('\n')
+    shopping_items.append(shopping_list)
+
+    # Flatten List into a dictionary and count the number of occurances
+    flat_list = [item for new_list in shopping_items for item in new_list]
+    item_count = Counter(flat_list)
+
+    # Create DataFrame and counts the number of times they have occured
+    shopping_amount = pd.DataFrame(list(item_count.items()))
+
+    shopping_amount = shopping_amount.rename(
+        columns={
+            0: 'Item_Name',
+            1: 'Quantity'
+        }
+    )
+    shopping_amount = shopping_amount.set_index(
+        'Item_Name', verify_integrity=True
+    )
+
+    print("\n\u001b[32mHere is the summary of your order:\x1b[0m\n\n",
+          shopping_amount)
+    print("\nPlease wait we are processing your order...")
+
+    return shopping_amount
+
+
+def update_inventory(inventory_df, shopping_amount):
+
+    # index inventory
+    inventory_oa = inventory_df.set_index('Item_Name', verify_integrity=True)
+
+    # Merge shopping cart with inventory list
+    shopping_cart = inventory_oa.merge(
+        shopping_amount, on='Item_Name', how='right'
+    )
+
+    # Subtract the inventory and fill empty values with 0
+    inventory_oa['Stock'] = inventory_oa['Stock'].subtract(
+        shopping_amount['Quantity'], fill_value=0
+    )
+
+    # Replace NaN with the orginal values
+    inventory_oa['Stock'] = inventory_oa['Stock'].fillna(value=shopping_cart
+                                                         ['Stock'])
+
+    # Change inventory stock column to integers
+    inventory_oa['Stock'] = inventory_oa['Stock'].astype(int)
+
+    # Reset the index to include 'Item_Name' as a column
+    inventory_oa = inventory_oa.reset_index()
+
+    # Reorder columns in inventory_oa to match inventory_df
+    inventory_oa = inventory_oa[inventory_df.columns]
+
+    # Update the original inventory_df with the changes made in inventory_oa
+    inventory_df.update(inventory_oa)
+
+    update_spreadsheet(inventory, inventory_df)
+    print(inventory_oa)
+
+
+def update_spreadsheet(worksheet, dataframe):
     """
     Deletes the old content from the spreadsheet and updates with new function
 
@@ -296,30 +311,41 @@ def update_spreadsheet(reset):
     ~ Update Status column with the stock_levels function
     """
 
-    inventory.clear()
-    set_with_dataframe(worksheet=inventory, dataframe=inventory_df,
+    set_with_dataframe(worksheet=worksheet, dataframe=dataframe,
                        include_index=False, include_column_header=True,
-                       resize=True)
+                       resize=False)
 
 
 def main():
     # Checking membership and exiting if not a member
     welcome()
+
     membership_details_returned = membership_details()
+
     logo = logo_function()
+
     if membership_details_returned is None:
         print(logo)
         return
+
     # Check stock levels
-    stock_levels(inventory_df)
+    stock_levels(inventory, inventory_df)
 
     stock = in_stock(inventory_df)
 
     shopping_bag = bag(stock)
-    order_amount(shopping_bag, inventory_df)
-    # f
-    order(membership_details_returned, shopping_bag, order_df, order)
-    # update_spreadsheet()
+
+    shopping_amount = order_amount(shopping_bag)
+
+    order(membership_details_returned, shopping_bag, order_df)
+
+    update_inventory(inventory_df, shopping_amount)
+
+    # Update inventory spreadsheet
+    update_spreadsheet(inventory, inventory_df)
+
+    # Update orders spreadsheet (example)
+    update_spreadsheet(orders, order_df)
 
 
 main()
