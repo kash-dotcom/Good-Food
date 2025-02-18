@@ -198,38 +198,6 @@ def bag(stock):
     return shopping_bag_str
 
 
-def order(membership_details, shopping_bag, order_df):
-    """
-    customer_order, inventory_df,
-    Summarise order spreadsheet
-    """
-    today = datetime.date.today()
-
-    name, membership_no, phone = membership_details
-
-    customer_order = shopping_bag
-
-    # Create a DataFrame
-    new_order = pd.DataFrame({
-        "Date": [today],
-        "Name": [name],
-        "Membership Number": [membership_no],
-        "phone": [phone],
-        "Order": [customer_order]
-    })
-
-    order_df = pd.concat([order_df, new_order])
-
-    # Update the order spreadsheet
-    update_spreadsheet(orders, order_df)
-
-    print("""\n\u001b[32mYour order is now being prepared by our
-amazing volunteers. Please pick it up between 10 AM and 3 PM.
-\n\nDon't forget to bring a reusable bag to help us reduce waste.
-\x1b[0m\n
-          """)
-
-
 def order_amount(shopping_bag):
     """
     Calcuation the number of items the customer has in the shopping basket
@@ -300,7 +268,52 @@ def update_inventory(inventory_df, shopping_amount):
     inventory_df.update(inventory_oa)
 
     update_spreadsheet(inventory, inventory_df)
-    print(inventory_oa)
+
+# Make those that fall in the subset expired_filt to change the status coloumn
+# every subset of inventory_df into
+
+
+def order(membership_details, shopping_bag, order_df):
+    """
+    customer_order, inventory_df,
+    Summarise order spreadsheet
+    """
+    today = datetime.date.today()
+
+    name, membership_no, phone = membership_details
+
+    customer_order = shopping_bag
+
+    # Create a DataFrame
+    new_order = pd.DataFrame({
+        "Date": [today],
+        "Name": [name],
+        "Membership Number": [membership_no],
+        "phone": [phone],
+        "Order": [customer_order]
+    })
+
+    order_df = pd.concat([order_df, new_order])
+
+    # Update the order spreadsheet
+    update_spreadsheet(orders, order_df)
+
+    print("""\n\u001b[32mYour order is now being prepared by our
+amazing volunteers. Please pick it up between 10 AM and 3 PM.
+\n\nDon't forget to bring a reusable bag to help us reduce waste.
+\x1b[0m\n
+          """)
+
+
+def clear_spreadsheet(worksheet, dataframe):
+    """
+    Clears the old content from the spreadsheet
+
+    Uses
+    ~ Update Status column with the stock_levels function
+    """
+
+    worksheet.clear()
 
 
 def update_spreadsheet(worksheet, dataframe):
@@ -340,6 +353,9 @@ def main():
     order(membership_details_returned, shopping_bag, order_df)
 
     update_inventory(inventory_df, shopping_amount)
+
+    # Clears the old content from the spreadsheet
+    clear_spreadsheet(inventory, inventory_df)
 
     # Update inventory spreadsheet
     update_spreadsheet(inventory, inventory_df)
