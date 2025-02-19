@@ -122,8 +122,8 @@ def stock_levels(inventory, inventory_df):
         today_pd = pd.to_datetime(today)
 
         # Change the Status column depending on the amount of stock
-        inventory_df.loc[inventory_df['Stock'] <= 10, 'Status'] = "Sold out"
-        inventory_df.loc[inventory_df['Stock'] > 10, 'Status'] = "In stock"
+        inventory_df.loc[inventory_df['Stock'] <= 0, 'Status'] = "Sold out"
+        inventory_df.loc[inventory_df['Stock'] > 0, 'Status'] = "In stock"
 
         # Changes the data type of the expiry_date column from string to Pandas
         # format eg datetime64[ns]
@@ -150,14 +150,16 @@ def stock_levels(inventory, inventory_df):
 
 
 def in_stock(inventory_df):
+    """
+    Displays the items that are in stock
+    """
     stock_mask = inventory_df[inventory_df['Status'] == 'In stock']
     stock_results = stock_mask[['Item_Name', 'Allegen', 'Status']]
     print(stock_results)
     return stock_results
 
 
-def bag(stock):
-
+def bag(stock, stock_results):
     """
     User selects an item using the index and it is added to the
     shopping bag
@@ -170,32 +172,55 @@ def bag(stock):
             user_selects = int(input(
                 "\nUse the numbers on the left hand side to pick an item.\n"
             ))
-            print("To add multiple items, simply select the item again.")
-            # print("""\n\t\x1b[32;3mFriendly reminder: \x1b[0m\n0 Please
+            # print("To add multiple items, simply select the item again.")
+            # print("" Please
             # select your items before pressing Enter to avoid restarting .
-            # your order""")
+            # your order"")
         except ValueError:
             print(
-                """\n\x1b[32;3mPlease enter a number to select an item
-                \x1b[0m"""
+                """\n\x1b[32;3mPlease enter a number to select an item\x1b[0m"""
             )
             continue
 
         if user_selects not in stock.index:
-            print("""\n\x1b[32;3mI can't seem to find that item, please"
-            "try again\x1b[0m""")
+            print("""\n\x1b[32;3mI can't seem to find that item, please try again\x1b[0m""")
+            continue
+
+        if user_selects not in stock_results.index:
+            print("""\n\x1b[32;3mSorry, that item has sold out\x1b[0m""")
             continue
 
         in_the_bag = stock.loc[user_selects, 'Item_Name']
         shopping_bag.append(in_the_bag)
-        shopping_bag_str = '\n'.join(shopping_bag)
-        print("\n\u001b[32mCurrently in your basket:\x1b[0m\n",
-              shopping_bag_str)
         items += 1
 
-        # updates inventory
-        continue
-    return shopping_bag_str
+        # Calculate the quantity for the last item added
+        last_item = [in_the_bag]
+        last_item_count = Counter(last_item)
+        last_item_df = pd.DataFrame(list(last_item_count.items()), columns=['Item_Name', 'Quantity'])
+        last_item_df = last_item_df.set_index('Item_Name', verify_integrity=True)
+
+        # Calculate the quantity for each item in the shopping bag
+        item_count = Counter(shopping_bag)
+        shopping_bag_df = pd.DataFrame(list(item_count.items()), columns=['Item_Name', 'Quantity'])
+        shopping_bag_df = shopping_bag_df.set_index('Item_Name', verify_integrity=True)
+
+        # Update the inventory for the last item added
+        update_inventory(inventory_df, last_item_df)
+
+        # Call stock_levels to update inventory status
+        stock_levels(inventory, inventory_df)
+
+        # Update stock results to reflect the current view of the shopping bag
+        stock_results = in_stock(inventory_df)
+
+        print("\n\u001b[32mCurrently in your basket:\x1b[0m\n", shopping_bag_df)
+        print("\n\n\t\x1b[32;3mTo add multiple items, simply select the item again\x1b[0m\n\n", stock_results)
+
+    return shopping_bag_df
+
+    #  except empty DataFrame
+    return shopping_bag_df
 
 
 def order_amount(shopping_bag):
@@ -207,7 +232,7 @@ def order_amount(shopping_bag):
     if shopping_bag is None:
         print("No item")
 
-    # # Create shopping list as a list
+    # Create shopping list as a list
     shopping_items = []
     shopping_list = shopping_bag.split('\n')
     shopping_items.append(shopping_list)
@@ -233,22 +258,22 @@ def order_amount(shopping_bag):
           shopping_amount)
     print("\nPlease wait we are processing your order...")
 
-    return shopping_amount
+#     return shopping_amount
 
 
-def update_inventory(inventory_df, shopping_amount):
+def update_inventory(inventory_df, shopping_bag_df):
 
     # index inventory
     inventory_oa = inventory_df.set_index('Item_Name', verify_integrity=True)
 
     # Merge shopping cart with inventory list
     shopping_cart = inventory_oa.merge(
-        shopping_amount, on='Item_Name', how='right'
+        shopping_bag_df, on='Item_Name', how='right'
     )
 
     # Subtract the inventory and fill empty values with 0
     inventory_oa['Stock'] = inventory_oa['Stock'].subtract(
-        shopping_amount['Quantity'], fill_value=0
+        shopping_bag_df['Quantity'], fill_value=0
     )
 
     # Replace NaN with the orginal values
@@ -344,15 +369,13 @@ def main():
     # Check stock levels
     stock_levels(inventory, inventory_df)
 
-    stock = in_stock(inventory_df)
+    stock_results = in_stock(inventory_df)
 
-    shopping_bag = bag(stock)
+    shopping_bag_df = bag(stock_results, stock_results)
 
-    shopping_amount = order_amount(shopping_bag)
+    # shopping_amount = order_amount(shopping_bag_df)
 
-    order(membership_details_returned, shopping_bag, order_df)
-
-    update_inventory(inventory_df, shopping_amount)
+    order(membership_details_returned, shopping_bag_df, order_df)
 
     # Clears the old content from the spreadsheet
     clear_spreadsheet(inventory, inventory_df)
