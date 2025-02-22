@@ -1,6 +1,7 @@
 import datetime
 import logging
 from collections import Counter
+import threading
 import gspread
 import pandas as pd
 from gspread_dataframe import set_with_dataframe
@@ -37,6 +38,12 @@ customer_df = pd.DataFrame(customer_li)
 
 order_li = orders.get_all_records()
 order_df = pd.DataFrame(order_li)
+
+# Global flag to show when an order has been completed
+order_complete = False
+
+# Global variable to hold the timer
+order_timer = None
 
 # logo function
 
@@ -75,7 +82,7 @@ def membership_details():
     """
     shop_or_exit = 0
     while shop_or_exit < 5:
-        username = input("\n\n Please enter your name: \n")
+        username = input("\n\nPlease enter your name: \n")
         # Turns user name into title format
         username_valid = username.title()
         try:
@@ -160,105 +167,116 @@ def in_stock(inventory_df):
 
 
 def bag(stock, stock_results):
+
+    # refactored code with Copilot to break into smaller functions
+    # copilot added the following functions:
+    # add_item_to_bag, calculate_shopping_bag, calculate_last_item,
+    # display_basket, manage_timer, update_inventory, order, time_out
     """
     User selects an item using the index and it is added to the
     shopping bag
     """
+    global order_timer, order_complete
     shopping_bag = []
     items = 0
 
-    while items < 5:
-        try:
-            user_selects = int(input(
-                "\nUse the numbers on the left hand side to pick an item.\n"
-            ))
-            # print("To add multiple items, simply select the item again.")
-            # print("" Please
-            # select your items before pressing Enter to avoid restarting .
-            # your order"")
-        except ValueError:
-            print(
-                """\n\x1b[32;3mPlease enter a number to select an item\x1b[0m"""
-            )
+    # While in development, the user can select up to 2 items
+    while items < 2:
+        user_selects = user_selection(stock, stock_results)
+        if user_selects is None:
             continue
 
-        if user_selects not in stock.index:
-            print("""\n\x1b[32;3mI can't seem to find that item, please try again\x1b[0m""")
-            continue
-
-        if user_selects not in stock_results.index:
-            print("""\n\x1b[32;3mSorry, that item has sold out\x1b[0m""")
-            continue
-
-        in_the_bag = stock.loc[user_selects, 'Item_Name']
-        shopping_bag.append(in_the_bag)
+        # Add the item to the shopping bag
+        add_item_to_bag(user_selects, stock, shopping_bag)
         items += 1
 
-        # Calculate the quantity for the last item added
-        last_item = [in_the_bag]
-        last_item_count = Counter(last_item)
-        last_item_df = pd.DataFrame(list(last_item_count.items()), columns=['Item_Name', 'Quantity'])
-        last_item_df = last_item_df.set_index('Item_Name', verify_integrity=True)
+        # Calculate the shopping bag
+        shopping_bag_df = calculate_shopping_bag(shopping_bag)
+        last_item_df = calculate_last_item(shopping_bag)
 
-        # Calculate the quantity for each item in the shopping bag
-        item_count = Counter(shopping_bag)
-        shopping_bag_df = pd.DataFrame(list(item_count.items()), columns=['Item_Name', 'Quantity'])
-        shopping_bag_df = shopping_bag_df.set_index('Item_Name', verify_integrity=True)
-
-        # Update the inventory for the last item added
+        # Update the inventory with stock levels
         update_inventory(inventory_df, last_item_df)
-
-        # Call stock_levels to update inventory status
         stock_levels(inventory, inventory_df)
-
-        # Update stock results to reflect the current view of the shopping bag
         stock_results = in_stock(inventory_df)
-
-        print("\n\u001b[32mCurrently in your basket:\x1b[0m\n", shopping_bag_df)
-        print("\n\n\t\x1b[32;3mTo add multiple items, simply select the item again\x1b[0m\n\n", stock_results)
+        # Prints shopping back in terminal
+        display_basket(shopping_bag_df, stock_results)
+        manage_timer(last_item_df, inventory_df)
 
     return shopping_bag_df
 
-    #  except empty DataFrame
-    return shopping_bag_df
+
+def user_selection(stock, stock_results):
+    try:
+        user_selects = int(input("""
+\nUse the numbers on the left hand side to pick an item.\n
+Friendly reminder: If you don't select something for five minutes
+your items will be returned to the shelf.\n\n"""))
+    except ValueError:
+        print("""\n\x1b[32;3mPlease enter a number to select an item\x1b[0m""")
+        return None
+
+    if user_selects not in stock.index:
+        print("""\n\x1b[32;3mI can't seem to find that item, please try again
+              \x1b[0m""")
+        return None
+
+    if user_selects not in stock_results.index:
+        print("""\n\x1b[32;3mSorry, that item has sold out\x1b[0m""")
+        return None
+
+    return user_selects
 
 
-def order_amount(shopping_bag):
+def add_item_to_bag(user_selects, stock, shopping_bag):
+    in_the_bag = stock.loc[user_selects, 'Item_Name']
+    shopping_bag.append(in_the_bag)
+
+
+def calculate_shopping_bag(shopping_bag):
     """
-    Calcuation the number of items the customer has in the shopping basket
-    Turns user's shopping list into a DataFrame
-
+    Looks for duplicate entries in the shopping bag and counts them
     """
-    if shopping_bag is None:
-        print("No item")
-
-    # Create shopping list as a list
-    shopping_items = []
-    shopping_list = shopping_bag.split('\n')
-    shopping_items.append(shopping_list)
-
-    # Flatten List into a dictionary and count the number of occurances
-    flat_list = [item for new_list in shopping_items for item in new_list]
-    item_count = Counter(flat_list)
-
-    # Create DataFrame and counts the number of times they have occured
-    shopping_amount = pd.DataFrame(list(item_count.items()))
-
-    shopping_amount = shopping_amount.rename(
-        columns={
-            0: 'Item_Name',
-            1: 'Quantity'
-        }
+    item_count = Counter(shopping_bag)
+    shopping_bag_df = pd.DataFrame(
+        list(item_count.items()),
+        columns=['Item_Name', 'Quantity']
     )
-    shopping_amount = shopping_amount.set_index(
+    shopping_bag_df = shopping_bag_df.set_index(
         'Item_Name', verify_integrity=True
     )
+    return shopping_bag_df
 
-    print("\n\u001b[32mHere is the summary of your order:\x1b[0m\n\n",
-          shopping_amount)
-    print("\nPlease wait we are processing your order...")
 
-#     return shopping_amount
+def calculate_last_item(shopping_bag):
+    """
+    Calculate the last item that has been added to the shopping bag
+    """
+    last_item = [shopping_bag[-1]]
+    last_item_count = Counter(last_item)
+    last_item_df = pd.DataFrame(
+        list(last_item_count.items()),
+        columns=['Item_Name', 'Quantity']
+    )
+    last_item_df = last_item_df.set_index('Item_Name', verify_integrity=True)
+    return last_item_df
+
+
+def display_basket(shopping_bag_df, stock_results):
+    """
+    prints the shopping bag and the results
+    """
+    print("\n\u001b[32mCurrently in your basket:\x1b[0m\n", shopping_bag_df)
+    print("\n\n\t\x1b[32;3mTo add multiple items, simply select the item again"
+          "\x1b[0m\n\n")
+    print(stock_results)
+
+
+def manage_timer(last_item_df, inventory_df):
+    global order_timer
+    if order_timer:
+        order_timer.cancel()
+    order_timer = threading.Timer(5, time_out, [last_item_df, inventory_df])
+    order_timer.start()
 
 
 def update_inventory(inventory_df, shopping_bag_df):
@@ -303,6 +321,10 @@ def order(membership_details, shopping_bag, order_df):
     customer_order, inventory_df,
     Summarise order spreadsheet
     """
+    global order_complete
+    order_complete = True
+    print(order_complete)
+
     today = datetime.date.today()
 
     name, membership_no, phone = membership_details
@@ -314,7 +336,7 @@ def order(membership_details, shopping_bag, order_df):
         "Date": [today],
         "Name": [name],
         "Membership Number": [membership_no],
-        "phone": [phone],
+        "Phone": [phone],
         "Order": [customer_order]
     })
 
@@ -330,6 +352,34 @@ amazing volunteers. Please pick it up between 10 AM and 3 PM.
           """)
 
 
+def time_out(last_item_df, inventory_df):
+    """
+    Adds the last items back into the inventory if the user does not
+    complete the order.
+    """
+    global order_complete
+    global order_timer
+    if not order_complete:
+        # index inventory
+        inventory_oa = inventory_df.set_index(
+            'Item_Name', verify_integrity=True)
+
+        # Add the last item back to the inventory
+        inventory_oa['Stock'] = inventory_oa['Stock'].add(
+            last_item_df['Quantity'], fill_value=0)
+
+        # Reset the index to include 'Item_Name' as a column
+        inventory_oa = inventory_oa.reset_index()
+
+        # Update the original inventory_df
+        # with the changes made in inventory_oa
+        inventory_df.update(inventory_oa)
+        update_spreadsheet(inventory, inventory_df)
+
+        print("""\n\x1b[32mTimeout, your order has been cancelled\x1b[0m\n
+              \n\x1b[32mPlease refresh the page and start again\x1b[0m\n""")
+
+
 def clear_spreadsheet(worksheet, dataframe):
     """
     Clears the old content from the spreadsheet
@@ -337,7 +387,6 @@ def clear_spreadsheet(worksheet, dataframe):
     Uses
     ~ Update Status column with the stock_levels function
     """
-
     worksheet.clear()
 
 
@@ -348,7 +397,6 @@ def update_spreadsheet(worksheet, dataframe):
     Uses
     ~ Update Status column with the stock_levels function
     """
-
     set_with_dataframe(worksheet=worksheet, dataframe=dataframe,
                        include_index=False, include_column_header=True,
                        resize=False)

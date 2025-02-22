@@ -329,6 +329,9 @@ https://saturncloud.io/blog/how-to-print-colored-text-to-the-terminal/
 https://www.geeksforgeeks.org/how-to-replace-values-in-column-based-on-condition-in-pandas 
 * Used in the project
 
+### Time delay
+https://www.sqlpey.com/python/top-10-methods-to-implement-time-delay-in-pythonmd/#2-threadingtimer
+
 ## Credit
 * GeeksforGeeks 
 * [Corey Schafer's Pandas Tutorials](https://www.youtube.com/@coreyms)
