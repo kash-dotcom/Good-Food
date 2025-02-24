@@ -45,6 +45,9 @@ order_complete = False
 # Global variable to hold the timer
 order_timer = None
 
+# Global variable to show if the time out has occurred
+time_out_occurred = False
+
 # logo function
 
 
@@ -69,8 +72,7 @@ As a member, you can:\n\n\u001b[32mSearch:\x1b[0m: For the items you need
 \u001b[32mSelect:\x1b[0m Choose up to \u001b[32m5 items\x1b[0m per order
 \u001b[32mSave:\x1b[0m Enjoy affordable prices of just \u001b[32m£3\x1b[0m
 """))
-
-    print("\n\n\u001b[32mStart exploring our selection today!\x1b[0m")
+    print("\nStart exploring our selection today!")
     return None
 
 
@@ -82,7 +84,7 @@ def membership_details():
     """
     shop_or_exit = 0
     while shop_or_exit < 5:
-        username = input("\n\nPlease enter your name: \n")
+        username = input("\n\x1b[32;3mPlease enter your name:\x1b[0m \n")
         # Turns user name into title format
         username_valid = username.title()
         try:
@@ -98,8 +100,6 @@ Pop into our shop to sign up and start exploring our delicious offerings.
                 print("""
 \x1b[32;3mYou have reached the maximum number of attempts.\x1b[0m""")
                 return None
-
-                raise ValueError("User login error - empty")
 
             # Uses column location to retrive data from spreadsheet
             # name = customer_info[0].values[0]
@@ -145,8 +145,9 @@ def stock_levels(inventory, inventory_df):
         clear_spreadsheet(inventory, inventory_df)
         update_spreadsheet(inventory, inventory_df)
 
-        print("""
-\n\x1b[32mChecking what we have in store for you today...\x1b[0m\n""")
+        print("""Checking what we have in store for you today...\n
+\n\t\x1b[32;3mTo add multiple items, simply select the item again\x1b[0m
+              """)
         return inventory_df, today_pd
 
     except Exception as e:
@@ -166,6 +167,15 @@ def in_stock(inventory_df):
     return stock_results
 
 
+def check_for_timeout():
+    if time_out_occurred:
+        print("""
+\n\x1b[32;3mYou cannot continue ordering as the timeout has occurred.
+        Please restart your browser \x1b[0m\n""")
+        return True
+    return False
+
+
 def bag(stock, stock_results):
 
     # refactored code with Copilot to break into smaller functions
@@ -176,15 +186,24 @@ def bag(stock, stock_results):
     User selects an item using the index and it is added to the
     shopping bag
     """
-    global order_timer, order_complete
+    global order_timer, order_complete, time_out_occurred
     shopping_bag = []
     items = 0
 
+    if check_for_timeout():
+        return None
+
     # While in development, the user can select up to 2 items
-    while items < 2:
+    while items < 3:
+        if check_for_timeout():
+            return None
+
         user_selects = user_selection(stock, stock_results)
         if user_selects is None:
             continue
+
+        if check_for_timeout():
+            return None
 
         # Add the item to the shopping bag
         add_item_to_bag(user_selects, stock, shopping_bag)
@@ -194,29 +213,45 @@ def bag(stock, stock_results):
         shopping_bag_df = calculate_shopping_bag(shopping_bag)
         last_item_df = calculate_last_item(shopping_bag)
 
+        if check_for_timeout():
+            return None
+
         # Update the inventory with stock levels
         update_inventory(inventory_df, last_item_df)
         stock_levels(inventory, inventory_df)
         stock_results = in_stock(inventory_df)
-        # Prints shopping back in terminal
-        display_basket(shopping_bag_df, stock_results)
-        manage_timer(last_item_df, inventory_df)
+        manage_timer(shopping_bag_df, inventory_df)
 
+        # Prints shopping bag in terminal
+        display_basket(shopping_bag_df, stock_results)
+
+        # Update the inventory with stock levels
     return shopping_bag_df
 
 
 def user_selection(stock, stock_results):
+    """
+    User selects an item using the index and it is added to the shopping bag
+    """
+    if time_out_occurred:
+        print(
+            """\n\x1b[32;3mYou cannot continue ordering as the timeout has occurred.
+            Please restart your browser \x1b[0m\n"""
+        )
+        return None
+
     try:
         user_selects = int(input("""
-\nUse the numbers on the left hand side to pick an item.\n
-Friendly reminder: If you don't select something for five minutes
-your items will be returned to the shelf.\n\n"""))
+\t\x1b[32;3mUse the numbers on the left hand side to pick an item.\x1b[0m\n
+                                 """))
+        # Friendly reminder: If you don't select something for five minutes
+        # your items will be returned to the shelf.\n\n
     except ValueError:
         print("""\n\x1b[32;3mPlease enter a number to select an item\x1b[0m""")
         return None
 
     if user_selects not in stock.index:
-        print("""\n\x1b[32;3mI can't seem to find that item, please try again
+        print("""\n\t\x1b[32;3mI can't seem to find that item, please try again
               \x1b[0m""")
         return None
 
@@ -265,17 +300,15 @@ def display_basket(shopping_bag_df, stock_results):
     """
     prints the shopping bag and the results
     """
-    print("\n\u001b[32mCurrently in your basket:\x1b[0m\n", shopping_bag_df)
-    print("\n\n\t\x1b[32;3mTo add multiple items, simply select the item again"
-          "\x1b[0m\n\n")
-    print(stock_results)
+    # print(stock_results)
+    print("\n\u001b[32mCurrently in your basket:\x1b[0m", shopping_bag_df)
 
 
-def manage_timer(last_item_df, inventory_df):
+def manage_timer(shopping_bag_df, inventory_df):
     global order_timer
     if order_timer:
         order_timer.cancel()
-    order_timer = threading.Timer(5, time_out, [last_item_df, inventory_df])
+    order_timer = threading.Timer(15, time_out, [shopping_bag_df, inventory_df])
     order_timer.start()
 
 
@@ -312,9 +345,6 @@ def update_inventory(inventory_df, shopping_bag_df):
 
     update_spreadsheet(inventory, inventory_df)
 
-# Make those that fall in the subset expired_filt to change the status coloumn
-# every subset of inventory_df into
-
 
 def order(membership_details, shopping_bag, order_df):
     """
@@ -323,7 +353,6 @@ def order(membership_details, shopping_bag, order_df):
     """
     global order_complete
     order_complete = True
-    print(order_complete)
 
     today = datetime.date.today()
 
@@ -352,12 +381,12 @@ amazing volunteers. Please pick it up between 10 AM and 3 PM.
           """)
 
 
-def time_out(last_item_df, inventory_df):
+def time_out(shopping_bag_df, inventory_df):
     """
     Adds the last items back into the inventory if the user does not
     complete the order.
     """
-    global order_complete
+    global order_complete, time_out_occurred
     global order_timer
     if not order_complete:
         # index inventory
@@ -366,7 +395,7 @@ def time_out(last_item_df, inventory_df):
 
         # Add the last item back to the inventory
         inventory_oa['Stock'] = inventory_oa['Stock'].add(
-            last_item_df['Quantity'], fill_value=0)
+            shopping_bag_df['Quantity'], fill_value=0)
 
         # Reset the index to include 'Item_Name' as a column
         inventory_oa = inventory_oa.reset_index()
@@ -376,8 +405,11 @@ def time_out(last_item_df, inventory_df):
         inventory_df.update(inventory_oa)
         update_spreadsheet(inventory, inventory_df)
 
-        print("""\n\x1b[32mTimeout, your order has been cancelled\x1b[0m\n
-              \n\x1b[32mPlease refresh the page and start again\x1b[0m\n""")
+        print("""
+\t\tTimeout, your order has been cancelled
+\n\t\t\x1b[32;3mPlease refresh the page and start again\x1b[0m\n
+              """)
+        time_out_occurred = True
 
 
 def clear_spreadsheet(worksheet, dataframe):
@@ -404,6 +436,7 @@ def update_spreadsheet(worksheet, dataframe):
 
 def main():
     # Checking membership and exiting if not a member
+
     welcome()
 
     membership_details_returned = membership_details()
@@ -420,6 +453,9 @@ def main():
     stock_results = in_stock(inventory_df)
 
     shopping_bag_df = bag(stock_results, stock_results)
+
+    if shopping_bag_df is None:
+        return
 
     # shopping_amount = order_amount(shopping_bag_df)
 
