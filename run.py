@@ -71,6 +71,10 @@ Discover a world of affordable, fresh food, right at your fingertips.
 As a member, you can:\n\n\u001b[32mSearch:\x1b[0m: For the items you need
 \u001b[32mSelect:\x1b[0m Choose up to \u001b[32m5 items\x1b[0m per order
 \u001b[32mSave:\x1b[0m Enjoy affordable prices of just \u001b[32m£3\x1b[0m
+\nYou have \u001b[32m5 minutes\x1b[0m to complete your order,
+otherwise, the items will go back on the shelf.
+Don't worry, you can always add them back to your cart later.\x1b[0m
+\n\u001b[32mHappy shopping!\x1b[0m
 """))
     print("\nStart exploring our selection today!")
     return None
@@ -84,7 +88,9 @@ def membership_details():
     """
     shop_or_exit = 0
     while shop_or_exit < 5:
-        username = input("\n\x1b[32;3mPlease enter your name:\x1b[0m \n")
+        username = input(
+            "\n\x1b[32;3mPlease enter your name:\x1b[0m \n"
+        ).strip()
         # Turns user name into title format
         username_valid = username.title()
         try:
@@ -120,7 +126,7 @@ Your membership number \u001b[32m{membership_no}\x1b[0m\n
 
 def stock_levels(inventory, inventory_df):
     """
-    Based on the expiry date
+    Based on the expiry date and in the inventory
 
     """
     try:
@@ -162,7 +168,7 @@ def in_stock(inventory_df):
     Displays the items that are in stock
     """
     stock_mask = inventory_df[inventory_df['Status'] == 'In stock']
-    stock_results = stock_mask[['Item_Name', 'Allegen', 'Status']]
+    stock_results = stock_mask[['Item_Name', 'Allegen']]
     print(stock_results)
     return stock_results
 
@@ -194,7 +200,8 @@ def bag(stock, stock_results):
         return None
 
     # While in development, the user can select up to 2 items
-    while items < 3:
+    while items < 5:
+
         if check_for_timeout():
             return None
 
@@ -218,14 +225,20 @@ def bag(stock, stock_results):
 
         # Update the inventory with stock levels
         update_inventory(inventory_df, last_item_df)
-        stock_levels(inventory, inventory_df)
-        stock_results = in_stock(inventory_df)
+
+        # Display the shopping bag
+        if items < 5:
+            stock_results = in_stock(inventory_df)
+            display_basket(shopping_bag_df, stock_results)
+        else:
+            print("""
+\u001b[32mYour order is now being prepared by our
+amazing volunteers. Please pick it up between 10 AM and 3 PM.
+""")
+            display_basket(shopping_bag_df, None)
+
         manage_timer(shopping_bag_df, inventory_df)
 
-        # Prints shopping bag in terminal
-        display_basket(shopping_bag_df, stock_results)
-
-        # Update the inventory with stock levels
     return shopping_bag_df
 
 
@@ -234,10 +247,9 @@ def user_selection(stock, stock_results):
     User selects an item using the index and it is added to the shopping bag
     """
     if time_out_occurred:
-        print(
-            """\n\x1b[32;3mYou cannot continue ordering as the timeout has occurred.
-            Please restart your browser \x1b[0m\n"""
-        )
+        print("""
+\n\x1b[32;3mYou cannot continue ordering as the timeout has occurred.
+            Please restart your browser \x1b[0m\n""")
         return None
 
     try:
@@ -308,7 +320,8 @@ def manage_timer(shopping_bag_df, inventory_df):
     global order_timer
     if order_timer:
         order_timer.cancel()
-    order_timer = threading.Timer(15, time_out, [shopping_bag_df, inventory_df])
+    order_timer = threading.Timer(
+        60, time_out, [shopping_bag_df, inventory_df])
     order_timer.start()
 
 
@@ -358,6 +371,8 @@ def order(membership_details, shopping_bag, order_df):
 
     name, membership_no, phone = membership_details
 
+    name = name.title()
+
     customer_order = shopping_bag
 
     # Create a DataFrame
@@ -374,11 +389,9 @@ def order(membership_details, shopping_bag, order_df):
     # Update the order spreadsheet
     update_spreadsheet(orders, order_df)
 
-    print("""\n\u001b[32mYour order is now being prepared by our
-amazing volunteers. Please pick it up between 10 AM and 3 PM.
-\n\nDon't forget to bring a reusable bag to help us reduce waste.
-\x1b[0m\n
-          """)
+    print("""
+\t\t\x1b[32;3mDon't forget to bring a reusable bag.\x1b[0m\n
+\t\tThank you for shopping with us today!\x1b[0m""")
 
 
 def time_out(shopping_bag_df, inventory_df):
