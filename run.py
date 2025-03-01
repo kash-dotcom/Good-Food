@@ -84,6 +84,9 @@ def check_last_order(order_df, membership_no, username_valid):
     """
     Check the last order from the orders spreadsheet
     """
+    # If the order spreadsheet is empty, the user can still order
+    if order_df.empty:
+        return True
     # Compares membership number to order spreadsheet
     membership_info = order_df['Membership Number'] == int(membership_no)
 
@@ -105,6 +108,7 @@ def check_last_order(order_df, membership_no, username_valid):
     ):
         return True
     else:
+        # Calculates the number of days until the user can order again
         days_to_wait = 7 - (pd.Timestamp.now() - last_order_date).days
         print(f"""
 \nWelcome back so soon \u001b[32m{username_valid}\x1b[0m,
@@ -121,6 +125,8 @@ def membership_details():
     Username, membership number and phone
     """
     shop_or_exit = 0
+
+    # While loop to allow the user to only try again up to 5 tries
     while shop_or_exit < 5:
         username = input(
             "\n\x1b[32;3mPlease enter your name:\x1b[0m \n"
@@ -142,7 +148,6 @@ Pop into our shop to sign up and start exploring our delicious offerings.
                 return None
 
             # Uses column location to retrive data from spreadsheet
-            # name = customer_info[0].values[0]
             membership_no = customer_info[1].values[0]
             phone = customer_info[4].values[0]
 
@@ -156,6 +161,7 @@ Pop into our shop to sign up and start exploring our delicious offerings.
 Your membership number \u001b[32m{membership_no}\x1b[0m
 \n\x1b[32;4mFinding your perfect food match!\u001b[0m
     """)
+                # To be used in the order function
                 return username, membership_no, phone, username_valid
             else:
                 return None
@@ -188,7 +194,7 @@ def stock_levels(inventory, inventory_df):
         inventory_df.loc[inventory_df['Expiry_Date'] <
                          today_pd, 'Status'] = 'Expired'
 
-        clear_spreadsheet(inventory, inventory_df)
+        # Calls update the inventory function to update spreadsheet
         update_spreadsheet(inventory, inventory_df)
 
         print("""Checking what we have in store for you today...\n
@@ -206,6 +212,9 @@ def stock_levels(inventory, inventory_df):
 def in_stock(inventory_df):
     """
     Displays the items that are in stock
+
+    returns
+    Item_Name and Allergen columns as stock results for bag function
     """
     stock_mask = inventory_df[inventory_df['Status'] == 'In stock']
     stock_results = stock_mask[['Item_Name', 'Allegen']]
@@ -214,6 +223,11 @@ def in_stock(inventory_df):
 
 
 def check_for_timeout():
+    """
+    Checks the global variable if a timeout has occurred
+
+    used for the bag function
+    """
     if time_out_occurred:
         print("""
 \n\x1b[32;3mYou cannot continue ordering as the timeout has occurred.
@@ -239,18 +253,16 @@ def bag(stock, stock_results):
     if check_for_timeout():
         return None
 
-    # While in development, the user can select up to 2 items
     while items < 5:
 
+        # checks for global variable time_out_occurred
         if check_for_timeout():
             return None
 
+        # handles user selection if nothing is inputed
         user_selects = user_selection(stock, stock_results)
         if user_selects is None:
             continue
-
-        if check_for_timeout():
-            return None
 
         # Add the item to the shopping bag
         add_item_to_bag(user_selects, stock, shopping_bag)
@@ -465,16 +477,6 @@ def time_out(shopping_bag_df, inventory_df):
         time_out_occurred = True
 
 
-def clear_spreadsheet(worksheet, dataframe):
-    """
-    Clears the old content from the spreadsheet
-
-    Uses
-    ~ Update Status column with the stock_levels function
-    """
-    worksheet.clear()
-
-
 def update_spreadsheet(worksheet, dataframe):
     """
     Deletes the old content from the spreadsheet and updates with new function
@@ -523,9 +525,6 @@ def main():
     # shopping_amount = order_amount(shopping_bag_df)
 
     order(membership_details_returned, shopping_bag_df, order_df)
-
-    # Clears the old content from the spreadsheet
-    clear_spreadsheet(inventory, inventory_df)
 
     # Update inventory spreadsheet
     update_spreadsheet(inventory, inventory_df)
