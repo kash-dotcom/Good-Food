@@ -53,12 +53,12 @@ time_out_occurred = False
 
 def logo_function():
     logo = (r"""
-         _____                 _ ______              _
-        / ____|               | |  ____|            | |
+          _____                 _ ______              _
+         / ____|               | |  ____|            | |
         | |  __  ___   ___   __| | |__ ___   ___   __| |
         | | |_ |/ _ \ / _ \ / _` |  __/ _ \ / _ \ / _` |
         | |__| | (_) | (_) | (_| | | | (_) | (_) | (_| |
-        \_____|\___/ \___/ \__,_|_|  \___/ \___/ \__,_|
+        \______|\___/ \___/ \__,_|_|  \___/ \___/ \__,_|
             """)
     return logo
 
@@ -78,6 +78,40 @@ Don't worry, you can always add them back to your cart later.\x1b[0m
 """))
     print("\nStart exploring our selection today!")
     return None
+
+
+def check_last_order(order_df, membership_no, username_valid):
+    """
+    Check the last order from the orders spreadsheet
+    """
+    # Compares membership number to order spreadsheet
+    membership_info = order_df['Membership Number'] == int(membership_no)
+
+    if membership_info.any():
+        # Returns the last order from the order spreadsheet
+        last_order = order_df[membership_info].iloc[-1]
+
+        # Extracts the date of the last order
+        last_order_date = last_order['Date']
+    else:
+        last_order_date = None
+
+    # Converts the date to a Pandas format
+    last_order_date = pd.to_datetime(last_order_date)
+
+    # Checks if the last order was within the last week
+    if last_order_date is None or (
+        last_order_date + pd.Timedelta(days=7) <= pd.Timestamp.now()
+    ):
+        return True
+    else:
+        days_to_wait = 7 - (pd.Timestamp.now() - last_order_date).days
+        print(f"""
+\nWelcome back so soon \u001b[32m{username_valid}\x1b[0m,
+\nYou can only order once per week, please check again in
+\u001b[32m{days_to_wait}\x1b[0m day(s).
+        """)
+        return False
 
 
 def membership_details():
@@ -112,16 +146,22 @@ Pop into our shop to sign up and start exploring our delicious offerings.
             membership_no = customer_info[1].values[0]
             phone = customer_info[4].values[0]
 
-            # prints welcome message to user
-            print(f"""
-\nWelcome \u001b[32m{username_valid}\x1b[0m,
-Your membership number \u001b[32m{membership_no}\x1b[0m\n
-\n\x1b[32;4mFind your perfect food match!\u001b[0m
-""")
-            return username, membership_no, phone
-            break
+            # Call the check_last_order function
+            valid_customer = check_last_order(
+                order_df, membership_no, username_valid)
+            if valid_customer:
+                # prints welcome message to user
+                print(f"""
+    \nWelcome \u001b[32m{username_valid}\x1b[0m,
+Your membership number \u001b[32m{membership_no}\x1b[0m
+\n\x1b[32;4mFinding your perfect food match!\u001b[0m
+    """)
+                return username, membership_no, phone, username_valid
+            else:
+                return None
         except Exception as e:
-            logging.debug(f"membership_details: {str(e)}")
+            print(f"An error occurred: {e}")
+            return None
 
 
 def stock_levels(inventory, inventory_df):
@@ -369,7 +409,7 @@ def order(membership_details, shopping_bag, order_df):
 
     today = datetime.date.today()
 
-    name, membership_no, phone = membership_details
+    name, membership_no, phone, username_valid = membership_details
 
     name = name.title()
 
@@ -457,6 +497,16 @@ def main():
     logo = logo_function()
 
     if membership_details_returned is None:
+        print(logo)
+        return
+
+    # Call the check_last_order function
+    valid_customer = check_last_order(
+        order_df,
+        membership_details_returned[1],
+        membership_details_returned[1]
+    )
+    if not valid_customer:
         print(logo)
         return
 
