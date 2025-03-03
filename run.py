@@ -1,13 +1,10 @@
 import datetime
-import logging
 from collections import Counter
 import threading
 import gspread
 import pandas as pd
 from gspread_dataframe import set_with_dataframe
 from google.oauth2.service_account import Credentials
-
-logging.basicConfig(filename="goodfood.log", level=logging.DEBUG, filemode="w")
 
 SCOPE = [
     "https://www.googleapis.com/auth/spreadsheets",
@@ -52,6 +49,9 @@ time_out_occurred = False
 
 
 def logo_function():
+    """
+    Returns the logo for the GoodFood Pantry
+    """
     logo = (r"""
           _____                 _ ______              _
          / ____|               | |  ____|            | |
@@ -64,25 +64,42 @@ def logo_function():
 
 
 def welcome():
+    """
+    Welcome to users, explains, purpose, and how to use the app
+    ---------------------------------------------
+
+    functions: logo_function
+
+    print: logo_function, welcome message
+
+    returns: None
+    """
     print(logo_function())
     print(("""
-    \n\x1b[32;4mWelcome to GoodFood Pantry online\u001b[0m\n\n
+\t\t\x1b[32;4mWelcome to GoodFood Pantry online\u001b[0m\n
 Discover a world of affordable, fresh food, right at your fingertips.
-As a member, you can:\n\n\u001b[32mSearch:\x1b[0m: For the items you need
-\u001b[32mSelect:\x1b[0m Choose up to \u001b[32m5 items\x1b[0m per order
-\u001b[32mSave:\x1b[0m Enjoy affordable prices of just \u001b[32m£3\x1b[0m
-\nYou have \u001b[32m5 minutes\x1b[0m to complete your order,
-otherwise, the items will go back on the shelf.
-Don't worry, you can always add them back to your cart later.\x1b[0m
+As a member, you can:\n\n\t\u001b[32mSearch:\x1b[0m: For the items you need
+\t\u001b[32mSelect:\x1b[0m Choose up to \u001b[32m5 items\x1b[0m per order
+\t\u001b[32mSave:\x1b[0m Enjoy affordable prices of just \u001b[32m£3\x1b[0m
+\t\nTo reserve your food, you have \u001b[32m5 minutes\x1b[0m to complete your
+order, otherwise, the items will go back on the shelf.
+If you make a mistake, you can refresh your browser to start again.
 \n\u001b[32mHappy shopping!\x1b[0m
 """))
-    print("\nStart exploring our selection today!")
+    print("Start exploring our selection today!")
     return None
 
 
 def check_last_order(order_df, membership_no, username_valid):
     """
     Check the last order from the orders spreadsheet
+    ---------------------------------------------
+    connections: order spreadsheet,
+    membership_details = membership_no, username_valid
+
+    print: "Welcome back so soon, You can only order once per week..."
+
+    returns: True if the user can order, False if the user cannot order
     """
     # If the order spreadsheet is empty, the user can still order
     if order_df.empty:
@@ -121,13 +138,24 @@ def check_last_order(order_df, membership_no, username_valid):
 def membership_details():
     """
     Matches the users input in a specific column and returns.
-    Returns
-    Username, membership number and phone
+    ---------------------------------------------
+
+    Connections: customer spreadsheet
+
+    functions: check_last_order
+
+    print: "Please enter your name:"
+    "Looks like you're not quite a member yet!..."
+    "You have reached the maximum number of.."
+    "Welcome {username},Your membership number {membership number}
+    Finding your perfect food match!"
+
+    returns: username, membership number and phone
     """
     shop_or_exit = 0
 
     # While loop to allow the user to only try again up to 5 tries
-    while shop_or_exit < 5:
+    while shop_or_exit < 10:
         username = input(
             "\n\x1b[32;3mPlease enter your name:\x1b[0m \n"
         ).strip()
@@ -136,13 +164,17 @@ def membership_details():
         try:
             # Compares username to customer spreadsheet by name
             customer_info = customer_df.loc[customer_df[0] == username_valid]
+
+            # User is not a member
             if customer_info.empty:
                 print(f"""
 \n\u001b[32m{username_valid}\x1b[0m,Looks like you're not quite a member yet!
 Pop into our shop to sign up and start exploring our delicious offerings.
                         """)
                 shop_or_exit += 1
-            if shop_or_exit == 5:
+
+# User has tried to enter the name too many times
+            if shop_or_exit == 10:
                 print("""
 \x1b[32;3mYou have reached the maximum number of attempts.\x1b[0m""")
                 return None
@@ -154,7 +186,9 @@ Pop into our shop to sign up and start exploring our delicious offerings.
             # Call the check_last_order function
             valid_customer = check_last_order(
                 order_df, membership_no, username_valid)
+
             if valid_customer:
+
                 # prints welcome message to user
                 print(f"""
     \nWelcome \u001b[32m{username_valid}\x1b[0m,
@@ -165,6 +199,8 @@ Your membership number \u001b[32m{membership_no}\x1b[0m
                 return username, membership_no, phone, username_valid
             else:
                 return None
+        except IndexError:
+            shop_or_exit += 1
         except Exception as e:
             print(f"An error occurred: {e}")
             return None
@@ -173,8 +209,18 @@ Your membership number \u001b[32m{membership_no}\x1b[0m
 def stock_levels(inventory, inventory_df):
     """
     Based on the expiry date and in the inventory
+    ---------------------------------------------
+
+    connections: inventory sreadsheet
+
+    functions: update_spreadsheet, check_for_timeout
+
+    returns: inventory_df, today_pd
 
     """
+    if check_for_timeout():
+        return None
+
     try:
         # Takes todays date and changes it into Pandas format
         today = datetime.date.today()
@@ -197,13 +243,10 @@ def stock_levels(inventory, inventory_df):
         # Calls update the inventory function to update spreadsheet
         update_spreadsheet(inventory, inventory_df)
 
-        print("""Checking what we have in store for you today...\n
-\n\t\x1b[32;3mTo add multiple items, simply select the item again\x1b[0m
-              """)
         return inventory_df, today_pd
 
     except Exception as e:
-        logging.debug(f"stock_levels: {str(e)}")
+        print(f"stock_levels: {str(e)}")
 
     finally:
         update_spreadsheet(inventory, inventory_df)
@@ -212,10 +255,17 @@ def stock_levels(inventory, inventory_df):
 def in_stock(inventory_df):
     """
     Displays the items that are in stock
+    ---------------------------------------------
 
-    returns
-    Item_Name and Allergen columns as stock results for bag function
+    connections: inventory spreadsheet
+
+    functions: check_for_timeout, stock_levels
+
+    returns: stock_results
     """
+    if check_for_timeout():
+        return None
+
     stock_mask = inventory_df[inventory_df['Status'] == 'In stock']
     stock_results = stock_mask[['Item_Name', 'Allegen']]
     print(stock_results)
@@ -225,28 +275,52 @@ def in_stock(inventory_df):
 def check_for_timeout():
     """
     Checks the global variable if a timeout has occurred
+    ---------------------------------------------
 
-    used for the bag function
+    connections: bag function
+
+    functions: time_out
+
+    print: "Your session has expired..."
+
+    returns: True if a timeout has occurred
     """
+    global time_out_occurred
     if time_out_occurred:
         print("""
-\n\x1b[32;3mYou cannot continue ordering as the timeout has occurred.
-        Please restart your browser \x1b[0m\n""")
+\n\x1b[32;3mYour session has expired.
+Please refresh the page to start a new order.\x1b[0m\n""")
         return True
-    return False
 
 
 def bag(stock, stock_results):
+    """
+    User selects an item using the index and it is added to the shopping bag
+    ---------------------------------------------
 
+    global variables: order_timer, order_complete, time_out_occurred
+
+    connections: checks the stock level and updates inventory spreadsheet
+
+    functions: check_for_timeout, user_selection, add_item_to_bag,
+    calculate_shopping_bag,calculate_last_item, display_basket,
+    manage_timer, stock_levels, in_stock, update_inventory, order, time_out
+
+    print: "Checking what we have in store for you today..."
+    "To add multiple items, simply select the item again"
+    "Your order is now being prepared by our amazing volunteers..."
+
+    returns: shopping_bag_df
+
+"""
     # refactored code with Copilot to break into smaller functions
     # copilot added the following functions:
     # add_item_to_bag, calculate_shopping_bag, calculate_last_item,
     # display_basket, manage_timer, update_inventory, order, time_out
-    """
-    User selects an item using the index and it is added to the
-    shopping bag
-    """
-    global order_timer, order_complete, time_out_occurred
+    global order_timer
+    global order_complete
+    global time_out_occurred
+
     shopping_bag = []
     items = 0
 
@@ -272,14 +346,17 @@ def bag(stock, stock_results):
         shopping_bag_df = calculate_shopping_bag(shopping_bag)
         last_item_df = calculate_last_item(shopping_bag)
 
-        if check_for_timeout():
-            return None
-
         # Update the inventory with stock levels
         update_inventory(inventory_df, last_item_df)
 
+        # Check stock levels
+        stock_levels(inventory, inventory_df)
+
         # Display the shopping bag
         if items < 5:
+            print("""Checking what we have in store for you today...\n
+\n\t\x1b[32;3mTo add multiple items, simply select the item again\x1b[0m
+              """)
             stock_results = in_stock(inventory_df)
             display_basket(shopping_bag_df, stock_results)
         else:
@@ -297,26 +374,34 @@ amazing volunteers. Please pick it up between 10 AM and 3 PM.
 def user_selection(stock, stock_results):
     """
     User selects an item using the index and it is added to the shopping bag
-    """
-    if time_out_occurred:
-        print("""
-\n\x1b[32;3mYou cannot continue ordering as the timeout has occurred.
-            Please restart your browser \x1b[0m\n""")
-        return None
+    ---------------------------------------------
 
+    functions: bag, check_for_timeout
+
+    print:
+    Use the numbers on the left hand side to pick an item.
+    Please enter a number to select an item
+    Sorry, that item has sold out
+    I can't seem to find that item, please try again
+
+    returns: user_selects
+    """
     try:
         user_selects = int(input("""
 \t\x1b[32;3mUse the numbers on the left hand side to pick an item.\x1b[0m\n
-                                 """))
-        # Friendly reminder: If you don't select something for five minutes
-        # your items will be returned to the shelf.\n\n
+                                """))
     except ValueError:
-        print("""\n\x1b[32;3mPlease enter a number to select an item\x1b[0m""")
+        print("""
+\n\x1b[32;3mPlease enter a number to select an item\x1b[0m
+            """)
+        return None
+
+    if check_for_timeout():
         return None
 
     if user_selects not in stock.index:
-        print("""\n\t\x1b[32;3mI can't seem to find that item, please try again
-              \x1b[0m""")
+        print("""\n\t\x1b[32;3mI can't seem to find that item,
+                please try again\x1b[0m""")
         return None
 
     if user_selects not in stock_results.index:
@@ -327,6 +412,13 @@ def user_selection(stock, stock_results):
 
 
 def add_item_to_bag(user_selects, stock, shopping_bag):
+    """
+    Adds the item to the shopping bag
+    ---------------------------------------------
+
+    functions: bag
+
+    """
     in_the_bag = stock.loc[user_selects, 'Item_Name']
     shopping_bag.append(in_the_bag)
 
@@ -334,6 +426,11 @@ def add_item_to_bag(user_selects, stock, shopping_bag):
 def calculate_shopping_bag(shopping_bag):
     """
     Looks for duplicate entries in the shopping bag and counts them
+    ---------------------------------------------
+
+    functions: bag
+
+    returns: shopping_bag_df
     """
     item_count = Counter(shopping_bag)
     shopping_bag_df = pd.DataFrame(
@@ -349,6 +446,11 @@ def calculate_shopping_bag(shopping_bag):
 def calculate_last_item(shopping_bag):
     """
     Calculate the last item that has been added to the shopping bag
+    ---------------------------------------------
+
+    functions: bag
+
+    returns: last_item_df
     """
     last_item = [shopping_bag[-1]]
     last_item_count = Counter(last_item)
@@ -363,21 +465,51 @@ def calculate_last_item(shopping_bag):
 def display_basket(shopping_bag_df, stock_results):
     """
     prints the shopping bag and the results
+    ---------------------------------------------
+
+    functions: bag, check_for_timeout
+
+    print: shopping_bag_df & message "Currently in your basket"
+
+    returns: None
+
     """
+    if check_for_timeout():
+        return None
+
     # print(stock_results)
     print("\n\u001b[32mCurrently in your basket:\x1b[0m", shopping_bag_df)
 
 
 def manage_timer(shopping_bag_df, inventory_df):
+    """
+    Manages the timer for the order
+    ---------------------------------------------
+
+    global variables: order_timer
+
+    functions: bag, check_for_timeout, time_out
+
+    returns: None
+
+    """
     global order_timer
     if order_timer:
         order_timer.cancel()
     order_timer = threading.Timer(
-        60, time_out, [shopping_bag_df, inventory_df])
+        5, time_out, [shopping_bag_df, inventory_df])
     order_timer.start()
 
 
 def update_inventory(inventory_df, shopping_bag_df):
+    """
+    Deducts the items from the inventory and changes it into a
+    dataframe to update the inventory spreadsheet
+    ---------------------------------------------
+    connections: inventory spreadsheet
+
+    functions: update_spreadsheet, bag, stock_levels
+    """
 
     # index inventory
     inventory_oa = inventory_df.set_index('Item_Name', verify_integrity=True)
@@ -413,8 +545,16 @@ def update_inventory(inventory_df, shopping_bag_df):
 
 def order(membership_details, shopping_bag, order_df):
     """
-    customer_order, inventory_df,
-    Summarise order spreadsheet
+    Summarises the order and adds it to the order spreadsheet
+    ---------------------------------------------
+    connections: order spreadsheet
+
+    functions: update_spreadsheet
+
+    print: "Don't forget to bring a reusable bag."
+    "Thank you for shopping with us today!"
+
+    Returns: None
     """
     global order_complete
     order_complete = True
@@ -450,6 +590,14 @@ def time_out(shopping_bag_df, inventory_df):
     """
     Adds the last items back into the inventory if the user does not
     complete the order.
+    ---------------------------------------------
+    connections: inventory spreadsheet
+
+    functions: update_spreadsheet
+
+    print: "Timeout, your order has been cancelled..."
+
+    returns: None
     """
     global order_complete, time_out_occurred
     global order_timer
@@ -475,18 +623,58 @@ def time_out(shopping_bag_df, inventory_df):
 \n\t\t\x1b[32;3mPlease refresh the page and start again\x1b[0m\n
               """)
         time_out_occurred = True
+    if time_out_occurred:
+        return None
 
 
 def update_spreadsheet(worksheet, dataframe):
     """
-    Deletes the old content from the spreadsheet and updates with new function
+    Updates the spreadsheet with the dataframe
+    ---------------------------------------------
+    connections: inventory & orders spreadsheet
 
-    Uses
-    ~ Update Status column with the stock_levels function
+    functions: order, time_out, update_inventory, stock_levels
+
+    returns: None
     """
     set_with_dataframe(worksheet=worksheet, dataframe=dataframe,
                        include_index=False, include_column_header=True,
                        resize=False)
+
+
+def combine_api_calls(update_spreadsheet, stock_levels, inventory_df,
+                      inventory, orders=None, order_df=None):
+    """
+    Combines the API calls
+    ---------------------------------------------
+    connections: stock_levels, update_spreadsheet
+
+    functions: order, time_out, update_inventory, stock_levels
+
+    returns: None
+
+    """
+    try:
+        stock_levels_thread = threading.Thread(target=stock_levels, args=(
+            inventory, inventory_df))
+        stock_levels_thread.start()
+
+        update_spreadsheet_thread = threading.Thread(
+                target=update_spreadsheet,
+                args=(inventory, inventory_df))
+
+        if orders is not None and order_df is not None:
+            update_spreadsheet_thread = threading.Thread(
+                target=update_spreadsheet,
+                args=(orders, order_df)
+            )
+            update_spreadsheet_thread.start()
+            update_spreadsheet_thread.join()
+
+        stock_levels_thread.join()
+
+    except TypeError:
+        print("Finding your perfect food match!")
 
 
 def main():
@@ -512,8 +700,13 @@ def main():
         print(logo)
         return
 
+    # Combine API calls
+    combine_api_calls(
+        update_spreadsheet, stock_levels, inventory_df,
+        inventory)
     # Check stock levels
-    stock_levels(inventory, inventory_df)
+
+    # stock_levels(inventory, inventory_df)
 
     stock_results = in_stock(inventory_df)
 
@@ -526,11 +719,16 @@ def main():
 
     order(membership_details_returned, shopping_bag_df, order_df)
 
-    # Update inventory spreadsheet
-    update_spreadsheet(inventory, inventory_df)
+    # Combine API calls
+    combine_api_calls(
+        update_spreadsheet, stock_levels, inventory_df,
+        inventory, orders, order_df)
 
-    # Update orders spreadsheet (example)
-    update_spreadsheet(orders, order_df)
+    # # Update inventory spreadsheet
+    # update_spreadsheet(inventory, inventory_df)
+
+    # # Update orders spreadsheet (example)
+    # update_spreadsheet(orders, order_df)
 
 
 main()
