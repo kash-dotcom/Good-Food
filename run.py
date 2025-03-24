@@ -389,6 +389,8 @@ def user_selection(stock, stock_results):
     try:
         user_selects = int(input("""
 \t\x1b[32;3mUse the numbers on the left hand side to pick an item.\x1b[0m\n
+\t\x1b[32;3mIf you make a mistake, just restart your browser\x1b[0m
+\t\x1b[32;3mand try again\x1b[0m\n
                                 """))
     except ValueError:
         print("""
@@ -497,7 +499,7 @@ def manage_timer(shopping_bag_df, inventory_df):
     if order_timer:
         order_timer.cancel()
     order_timer = threading.Timer(
-        5, time_out, [shopping_bag_df, inventory_df])
+        60, time_out, [shopping_bag_df, inventory_df])
     order_timer.start()
 
 
